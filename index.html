@@ -116,24 +116,8 @@
   .how-to { background: #fafafa; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
   .how-to-step { display: flex; gap: 10px; align-items: flex-start; padding: 5px 0; font-size: 13px; color: #666; }
   .step-num { width: 20px; height: 20px; border-radius: 50%; background: #D4537E; color: white; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
-
-  /* Import feature styles */
-  .import-drop { border: 2px dashed #D4537E; border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; background: #FBEAF0; }
-  .import-drop:hover, .import-drop.dragover { background: #f5d0dd; }
-  .import-drop input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-  .import-drop-text { font-size: 13px; color: #993556; pointer-events: none; }
-  .import-preview-img { max-width: 100%; max-height: 160px; border-radius: 8px; margin: 10px auto; display: block; border: 1px solid #eee; }
-  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Review table for imported clients */
-  .review-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
-  .review-table th { background: #fafafa; padding: 6px 8px; text-align: left; font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; border-bottom: 1px solid #eee; }
-  .review-table td { padding: 6px 8px; border-bottom: 1px solid #f5f5f5; }
-  .review-table td input { padding: 4px 6px; font-size: 12px; border: 1px solid #eee; border-radius: 4px; }
-  .review-table tr:hover td { background: #fafafa; }
-  .review-row-remove { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 16px; padding: 0 4px; }
 </style>
+
 
 <div class="app">
   <div class="header">
@@ -143,6 +127,8 @@
       <p>Dillard's &middot; Tallahassee</p>
     </div>
   </div>
+
+  <div id="welcome-banner" class="msg-success" style="display:none;margin-bottom:12px;font-size:14px"></div>
 
   <div class="tabs">
     <button class="tab active" onclick="switchTab('clients')">&#128100; Clients</button>
@@ -158,36 +144,6 @@
       <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total clients</div></div>
       <div class="stat"><div class="stat-num" id="stat-bday">0</div><div class="stat-label">Birthday this month</div></div>
       <div class="stat"><div class="stat-num" id="stat-months">&#8212;</div><div class="stat-label">Most common month</div></div>
-    </div>
-
-    <!-- IMPORT FROM PHOTO -->
-    <div class="card">
-      <div class="section-title">&#128247; Import clients from a photo</div>
-      <p style="font-size:13px;color:#666;margin-bottom:12px">Take a photo of your client list sheet and AI will read it and fill everything in automatically.</p>
-      <div class="import-drop" id="import-drop">
-        <input type="file" accept="image/*" id="import-file-input" onchange="handleImportFile(this.files[0])">
-        <div class="import-drop-text">
-          <div style="font-size:28px;margin-bottom:6px">&#128247;</div>
-          <strong>Drop your client sheet photo here</strong><br>or tap to upload
-        </div>
-      </div>
-      <img id="import-preview-img" class="import-preview-img" src="" alt="" style="display:none">
-      <div id="import-status" style="margin-top:10px;display:none"></div>
-      <div id="import-review" style="margin-top:12px;display:none">
-        <div class="section-title" style="margin-bottom:8px">&#9989; Review before importing &mdash; edit anything that looks wrong</div>
-        <div style="overflow-x:auto">
-          <table class="review-table" id="review-table">
-            <thead><tr><th>First</th><th>Last</th><th>Phone</th><th>Birthday</th><th>Notes</th><th></th></tr></thead>
-            <tbody id="review-tbody"></tbody>
-          </table>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <button class="btn btn-primary" onclick="confirmImport()">&#10003; Add all to database</button>
-          <button class="btn btn-ghost" onclick="cancelImport()">Cancel</button>
-        </div>
-        <div class="msg-success" id="import-success"></div>
-      </div>
-      <div class="msg-error" id="import-error"></div>
     </div>
 
     <!-- MANUAL ADD -->
@@ -210,7 +166,10 @@
       </div>
       <div class="row" style="margin-bottom:0;align-items:flex-end">
         <div class="field"><label>Notes (optional)</label><input type="text" id="new-notes" placeholder="VIP, prefers gold, etc."></div>
-        <button class="btn btn-primary" onclick="addClient()">+ Add</button>
+        <div class="field"><label>Interested in (optional)</label><input type="text" id="new-wishlist" placeholder="e.g. Elisa pendant, gold hoops"></div>
+      </div>
+      <div class="row" style="margin-bottom:0;align-items:flex-end">
+        <button class="btn btn-primary" onclick="addClient()" style="width:100%">+ Add client</button>
       </div>
       <div class="msg-success" id="add-success">&#10003; Client added!</div>
     </div>
@@ -224,29 +183,34 @@
         <option>September</option><option>October</option><option>November</option><option>December</option>
       </select>
     </div>
+    <div class="filter-row">
+      <label class="checkbox-item" style="font-size:12px;color:#666;flex:1">
+        <input type="checkbox" id="filter-followup" onchange="renderClients()">
+        <span>&#8987; Needs follow-up (30+ days, or never contacted)</span>
+      </label>
+    </div>
     <div id="client-list"></div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="section-title">Backup &amp; restore</div>
+      <p style="font-size:12px;color:#888;margin-bottom:10px">Your client list is stored only on this device. Export a backup regularly so you don't lose it.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="exportClients()">&#11015;&#65039; Export backup (.json)</button>
+        <label class="btn btn-ghost" style="position:relative;overflow:hidden;cursor:pointer">
+          &#11014;&#65039; Import backup (.json)
+          <input type="file" accept=".json,application/json" onchange="importClientsFile(this.files[0])" style="position:absolute;inset:0;opacity:0;cursor:pointer">
+        </label>
+      </div>
+      <div class="msg-success" id="backup-success"></div>
+      <div class="msg-error" id="backup-error"></div>
+    </div>
   </div>
 
   <!-- MESSAGE -->
   <div id="panel-message" class="panel">
     <div class="card">
       <div class="section-title">1. Choose a template</div>
-      <div class="template-card selected" id="tpl-birthday" onclick="selectTemplate('birthday')">
-        <div class="template-title">&#127874; Birthday discount reminder</div>
-        <div class="template-preview">50% off during their birthday month.</div>
-      </div>
-      <div class="template-card" id="tpl-newitems" onclick="selectTemplate('newitems')">
-        <div class="template-title">&#10024; New pieces arrived</div>
-        <div class="template-preview">Alert clients to new Kendra Scott arrivals.</div>
-      </div>
-      <div class="template-card" id="tpl-promo" onclick="selectTemplate('promo')">
-        <div class="template-title">&#128717; Promotion / sale</div>
-        <div class="template-preview">Announce a current promotion or sale.</div>
-      </div>
-      <div class="template-card" id="tpl-intro" onclick="selectTemplate('intro')">
-        <div class="template-title">&#128075; Introduction</div>
-        <div class="template-preview">Introduce yourself as their personal Kendra Scott specialist at Dillard's.</div>
-      </div>
+      <div id="template-list"></div>
     </div>
     <div class="card">
       <div class="section-title">2. Add product image</div>
@@ -535,171 +499,58 @@ const MONTHS=['January','February','March','April','May','June','July','August',
 const NOW_MONTH=MONTHS[new Date().getMonth()];
 let clients=[];
 try{clients=JSON.parse(localStorage.getItem('ks_clients')||'[]');}catch(e){clients=[];}
-let selectedTemplate='birthday';
 let selectedRecipients=new Set();
 let attachedImageDataUrl=null;
-let pendingImport=[];
+
+// ============================================================
+// MESSAGE TEMPLATES (config-driven)
+// Each template's body supports placeholders:
+//   {{name}}    — client first name (or "[Client Name]")
+//   {{product:...__PRODUCT__...}} — a block that is only
+//                  included if a product was entered; __PRODUCT__
+//                  inside it is replaced with the product name
+//   {{extra}}   — value of the "Additional note" field, wrapped
+//                  in its own line if present, else removed
+//   {{signature}} — the closing signature block
+// To add a department/brand variant, add a new entry here —
+// no other code needs to change.
+// ============================================================
+const SIGNATURE='\u2014 Andrea\nKendra Scott Specialist \u00b7 Dillard\'s Tallahassee';
+const TEMPLATES=[
+  {
+    id:'birthday',
+    icon:'\uD83C\uDF82',
+    title:'Birthday discount reminder',
+    preview:'50% off during their birthday month.',
+    body:'Hi {{name}}! \uD83C\uDF82 It\'s your birthday month, which means you get 50% off a piece from Kendra Scott at Dillard\'s \u2014 exclusively for you! Come celebrate yourself in store.{{product:\n\nI\'d love to show you the __PRODUCT__ \u2014 I think you\'ll love it!}}{{extra}}\n\n{{signature}}'
+  },
+  {
+    id:'newitems',
+    icon:'\u2728',
+    title:'New pieces arrived',
+    preview:'Alert clients to new Kendra Scott arrivals.',
+    body:'Hi {{name}}! Just wanted to let you know that new Kendra Scott pieces just arrived at Dillard\'s Tallahassee and they are stunning! \uD83D\uDC8E{{product:\n\nHighlight: the __PRODUCT__ just came in.}}{{extra}}\n\n{{signature}}'
+  },
+  {
+    id:'promo',
+    icon:'\uD83D\uDECD\uFE0F',
+    title:'Promotion / sale',
+    preview:'Announce a current promotion or sale.',
+    body:'Hi {{name}}! \uD83D\uDECD\uFE0F We have an exciting promotion going on at Kendra Scott in Dillard\'s Tallahassee right now \u2014 come check it out!{{product:\n\nFeatured: __PRODUCT__}}{{extra}}\n\n{{signature}}'
+  },
+  {
+    id:'intro',
+    icon:'\uD83D\uDC4B',
+    title:'Introduction',
+    preview:'Introduce yourself as their personal Kendra Scott specialist at Dillard\'s.',
+    body:'Hi {{name}}! My name is Andrea and I\'m the Kendra Scott specialist here at Dillard\'s Tallahassee. \uD83D\uDC4B\uD83C\uDFFD\n\nI just want to say \u2014 I\'m a real person, not a bot! Part of Dillard\'s mission is to make shopping feel personal and effortless, so think of me as your own personal Kendra Scott contact.\n\nI\'m available anytime you have questions, want to place an order, or just want to know what\'s new. Whenever we get pieces in that I think match your style, I\'ll send them your way so you never miss something you\'d love. \uD83D\uDC8E\n\nDon\'t hesitate to reach out \u2014 I\'m here to help!{{extra}}\n\n{{signature}}'
+  }
+];
+let selectedTemplate=TEMPLATES[0].id;
 
 function save(){try{localStorage.setItem('ks_clients',JSON.stringify(clients));}catch(e){}}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function initials(f,l){return((f||'')[0]||'').toUpperCase()+((l||'')[0]||'').toUpperCase();}
-
-// ============================================================
-// IMPORT FROM PHOTO
-// This is the new feature. Here is what each part does:
-//
-// 1. handleImportFile()  — reads the image file and converts
-//    it to base64 (a text format APIs can receive)
-//
-// 2. importClientsFromImage() — sends that base64 image to
-//    Claude's API with a prompt asking it to extract the
-//    client data and return it as JSON
-//
-// 3. showReviewTable() — displays the extracted data in an
-//    editable table so you can fix any mistakes before saving
-//
-// 4. confirmImport() — takes the reviewed rows and pushes
-//    them into the clients array, then saves to localStorage
-// ============================================================
-
-const importDrop=document.getElementById('import-drop');
-importDrop.addEventListener('dragover',e=>{e.preventDefault();importDrop.classList.add('dragover');});
-importDrop.addEventListener('dragleave',()=>importDrop.classList.remove('dragover'));
-importDrop.addEventListener('drop',e=>{e.preventDefault();importDrop.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f)handleImportFile(f);});
-
-function handleImportFile(file){
-  if(!file||!file.type.startsWith('image/'))return;
-
-  // Show a preview of the uploaded photo
-  const previewImg=document.getElementById('import-preview-img');
-  previewImg.src=URL.createObjectURL(file);
-  previewImg.style.display='block';
-
-  // Convert the image to base64, then send to Claude
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const base64=e.target.result.split(',')[1]; // strip the "data:image/jpeg;base64," prefix
-    importClientsFromImage(base64, file.type);
-  };
-  reader.readAsDataURL(file);
-}
-
-async function importClientsFromImage(base64, mimeType){
-  // Show a loading spinner while Claude reads the image
-  const statusEl=document.getElementById('import-status');
-  const errorEl=document.getElementById('import-error');
-  errorEl.style.display='none';
-  statusEl.style.display='block';
-  statusEl.innerHTML='<div style="background:#FBEAF0;color:#993556;padding:10px 14px;border-radius:8px;font-size:13px"><span class="spinner"></span> AI is reading your client sheet...</div>';
-
-  try{
-    const response=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1500,
-        messages:[{
-          role:'user',
-          content:[
-            {
-              type:'image',
-              source:{type:'base64', media_type:mimeType, data:base64}
-            },
-            {
-              // This prompt is carefully written to get clean JSON back
-              // with no extra text, markdown, or explanation
-              type:'text',
-              text:`You are reading a handwritten client list for a Kendra Scott jewelry sales specialist.
-Extract every client row you can see into a JSON array.
-Each object must have these exact keys: fname, lname, phone, bday, notes.
-- bday should be just the month name (e.g. "August") or empty string if not listed
-- notes should include any jewelry preferences or other info
-- phone should be formatted as written
-Return ONLY the raw JSON array. No markdown, no explanation, no code fences.`
-            }
-          ]
-        }]
-      })
-    });
-
-    const data=await response.json();
-
-    // Claude returns an array of content blocks — we want the text block
-    const text=data.content.find(b=>b.type==='text')?.text||'';
-
-    // Parse the JSON Claude returned
-    const extracted=JSON.parse(text.trim());
-
-    statusEl.style.display='none';
-
-    if(!Array.isArray(extracted)||extracted.length===0){
-      throw new Error('No clients found in image.');
-    }
-
-    // Store the extracted clients temporarily for review
-    pendingImport=extracted;
-    showReviewTable(extracted);
-
-  }catch(err){
-    statusEl.style.display='none';
-    errorEl.textContent='Something went wrong: '+err.message+'. Please try again or add clients manually.';
-    errorEl.style.display='block';
-  }
-}
-
-function showReviewTable(rows){
-  const reviewEl=document.getElementById('import-review');
-  const tbody=document.getElementById('review-tbody');
-  reviewEl.style.display='block';
-
-  // Build an editable row for each extracted client
-  // so Andrea can fix any handwriting misreads before confirming
-  tbody.innerHTML=rows.map((c,i)=>`
-    <tr id="review-row-${i}">
-      <td><input value="${esc(c.fname||'')}" onchange="pendingImport[${i}].fname=this.value" style="width:70px"></td>
-      <td><input value="${esc(c.lname||'')}" onchange="pendingImport[${i}].lname=this.value" style="width:80px"></td>
-      <td><input value="${esc(c.phone||'')}" onchange="pendingImport[${i}].phone=this.value" style="width:110px"></td>
-      <td>
-        <select onchange="pendingImport[${i}].bday=this.value" style="width:90px;font-size:12px;padding:4px 6px">
-          <option value="">None</option>
-          ${MONTHS.map(m=>`<option ${c.bday===m?'selected':''}>${m}</option>`).join('')}
-        </select>
-      </td>
-      <td><input value="${esc(c.notes||'')}" onchange="pendingImport[${i}].notes=this.value" style="width:120px"></td>
-      <td><button class="review-row-remove" onclick="removeReviewRow(${i})">&#10005;</button></td>
-    </tr>`).join('');
-}
-
-function removeReviewRow(i){
-  document.getElementById('review-row-'+i).remove();
-  pendingImport[i]=null; // mark as deleted
-}
-
-function confirmImport(){
-  // Filter out deleted rows, assign IDs, and push into the main clients array
-  const toAdd=pendingImport.filter(c=>c!==null);
-  toAdd.forEach(c=>clients.push({id:Date.now()+Math.random(), fname:c.fname||'', lname:c.lname||'', phone:c.phone||'', bday:c.bday||'', notes:c.notes||''}));
-  save();
-  renderAll();
-
-  // Reset the import UI
-  pendingImport=[];
-  document.getElementById('import-review').style.display='none';
-  document.getElementById('import-preview-img').style.display='none';
-  document.getElementById('import-file-input').value='';
-  const s=document.getElementById('import-success');
-  s.textContent='\u2713 '+toAdd.length+' clients imported successfully!';
-  s.style.display='block';
-  setTimeout(()=>s.style.display='none',4000);
-}
-
-function cancelImport(){
-  pendingImport=[];
-  document.getElementById('import-review').style.display='none';
-  document.getElementById('import-preview-img').style.display='none';
-  document.getElementById('import-file-input').value='';
-}
 
 // ============================================================
 // PRODUCT IMAGE ATTACHMENT (for Send Message tab)
@@ -757,15 +608,101 @@ function addClient(){
   const phone=document.getElementById('new-phone').value.trim();
   const bday=document.getElementById('new-bday').value;
   const notes=document.getElementById('new-notes').value.trim();
+  const wishlist=document.getElementById('new-wishlist').value.trim();
   if(!fname||!phone){alert('Please enter at least a first name and phone number.');return;}
-  clients.push({id:Date.now(),fname,lname,phone,bday,notes});
+  clients.push({id:Date.now(),fname,lname,phone,bday,notes,wishlist,lastContacted:null});
   save();
-  ['new-fname','new-lname','new-phone','new-notes'].forEach(id=>document.getElementById(id).value='');
+  ['new-fname','new-lname','new-phone','new-notes','new-wishlist'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('new-bday').value='';
   const s=document.getElementById('add-success');s.style.display='block';setTimeout(()=>s.style.display='none',2500);
   renderAll();
 }
 function deleteClient(id){if(!confirm('Remove this client?'))return;clients=clients.filter(c=>c.id!==id);save();renderAll();}
+function markContacted(id){
+  const c=clients.find(c=>c.id===id);
+  if(!c)return;
+  c.lastContacted=Date.now();
+  save();
+  renderClients();
+}
+function daysSince(ts){
+  if(!ts)return null;
+  return Math.floor((Date.now()-ts)/(1000*60*60*24));
+}
+function formatLastContacted(ts){
+  if(!ts)return 'Never contacted';
+  const d=daysSince(ts);
+  if(d===0)return 'Contacted today';
+  if(d===1)return 'Contacted 1 day ago';
+  return 'Contacted '+d+' days ago';
+}
+function needsFollowUp(c){
+  const d=daysSince(c.lastContacted);
+  return d===null||d>=30;
+}
+
+// ============================================================
+// BACKUP: EXPORT / IMPORT
+// ============================================================
+function exportClients(){
+  const blob=new Blob([JSON.stringify(clients,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const date=new Date().toISOString().slice(0,10);
+  a.href=url;
+  a.download='ks-clients-backup-'+date+'.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  const s=document.getElementById('backup-success');
+  s.textContent='\u2713 Backup downloaded ('+clients.length+' clients)';
+  s.style.display='block';
+  setTimeout(()=>s.style.display='none',4000);
+}
+function importClientsFile(file){
+  const successEl=document.getElementById('backup-success');
+  const errorEl=document.getElementById('backup-error');
+  errorEl.style.display='none';
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const imported=JSON.parse(e.target.result);
+      if(!Array.isArray(imported))throw new Error('File does not contain a client list.');
+      // Normalize and assign fresh IDs to avoid collisions with existing clients
+      const existingIds=new Set(clients.map(c=>c.id));
+      let added=0;
+      imported.forEach(c=>{
+        if(!c||typeof c!=='object'||!c.fname)return;
+        let id=c.id||Date.now()+Math.random();
+        while(existingIds.has(id))id=Date.now()+Math.random();
+        existingIds.add(id);
+        clients.push({
+          id,
+          fname:c.fname||'',
+          lname:c.lname||'',
+          phone:c.phone||'',
+          bday:c.bday||'',
+          notes:c.notes||'',
+          wishlist:c.wishlist||'',
+          lastContacted:c.lastContacted||null
+        });
+        added++;
+      });
+      if(!added)throw new Error('No valid client records found in file.');
+      save();
+      renderAll();
+      successEl.textContent='\u2713 Imported '+added+' client(s) from backup';
+      successEl.style.display='block';
+      setTimeout(()=>successEl.style.display='none',4000);
+    }catch(err){
+      errorEl.textContent='Could not import file: '+err.message;
+      errorEl.style.display='block';
+    }
+  };
+  reader.readAsText(file);
+}
 // ============================================================
 // INFO TAB — BIRTHSTONE DATA & RENDERER
 // ============================================================
@@ -811,10 +748,39 @@ function renderStats(){
 function renderClients(){
   const q=document.getElementById('search-clients').value.toLowerCase();
   const m=document.getElementById('filter-month').value;
+  const followUpOnly=document.getElementById('filter-followup').checked;
   const el=document.getElementById('client-list');
-  const f=clients.filter(c=>{const n=(c.fname+' '+c.lname).toLowerCase();return(!q||n.includes(q)||c.phone.includes(q))&&(!m||c.bday===m);});
-  if(!f.length){el.innerHTML='<div class="empty-state">No clients yet. Add your first client above or import from a photo!</div>';return;}
-  el.innerHTML=f.map(c=>{const b=c.bday===NOW_MONTH;return`<div class="client-row${b?' bday-highlight':''}"><div class="avatar">${initials(c.fname,c.lname)}</div><div class="client-info"><div class="client-name">${esc(c.fname)} ${esc(c.lname)}</div><div class="client-meta">${esc(c.phone)}${c.bday?' \u00b7 '+c.bday:''}${c.notes?' \u00b7 '+esc(c.notes):''}</div></div>${b?'<span class="badge">&#127874; Birthday month</span>':''}<button class="btn-danger" onclick="deleteClient(${c.id})">Remove</button></div>`;}).join('');
+  const f=clients.filter(c=>{
+    const n=(c.fname+' '+c.lname).toLowerCase();
+    const matchesSearch=!q||n.includes(q)||c.phone.includes(q)||(c.notes||'').toLowerCase().includes(q)||(c.wishlist||'').toLowerCase().includes(q);
+    const matchesMonth=!m||c.bday===m;
+    const matchesFollowUp=!followUpOnly||needsFollowUp(c);
+    return matchesSearch&&matchesMonth&&matchesFollowUp;
+  });
+  if(!f.length){
+    el.innerHTML=clients.length
+      ?'<div class="empty-state">No clients match your filters.</div>'
+      :'<div class="empty-state">No clients yet. Add your first client above!</div>';
+    return;
+  }
+  el.innerHTML=f.map(c=>{
+    const b=c.bday===NOW_MONTH;
+    const fu=needsFollowUp(c);
+    let meta=esc(c.phone);
+    if(c.bday)meta+=' \u00b7 '+c.bday;
+    if(c.notes)meta+=' \u00b7 '+esc(c.notes);
+    if(c.wishlist)meta+='<br><span style="color:#D4537E">&#10024; Interested in: '+esc(c.wishlist)+'</span>';
+    meta+='<br><span style="color:'+(fu?'#c0392b':'#aaa')+'">'+formatLastContacted(c.lastContacted)+'</span>';
+    return`<div class="client-row${b?' bday-highlight':''}">
+      <div class="avatar">${initials(c.fname,c.lname)}</div>
+      <div class="client-info"><div class="client-name">${esc(c.fname)} ${esc(c.lname)}</div><div class="client-meta">${meta}</div></div>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+        ${b?'<span class="badge">&#127874; Birthday month</span>':''}
+        <button class="btn-ghost" style="font-size:11px;padding:4px 8px" onclick="markContacted(${c.id})">&#10003; Mark contacted</button>
+        <button class="btn-danger" onclick="deleteClient(${c.id})">Remove</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 function renderRecipients(){
   const el=document.getElementById('recipient-list');
@@ -829,33 +795,36 @@ function clearAll(){selectedRecipients.clear();renderRecipients();updatePreview(
 // ============================================================
 // MESSAGE BUILDER
 // ============================================================
+function renderTemplateList(){
+  const el=document.getElementById('template-list');
+  el.innerHTML=TEMPLATES.map(t=>`<div class="template-card${t.id===selectedTemplate?' selected':''}" id="tpl-${t.id}" onclick="selectTemplate('${t.id}')">
+    <div class="template-title">${t.icon} ${esc(t.title)}</div>
+    <div class="template-preview">${esc(t.preview)}</div>
+  </div>`).join('');
+}
 function selectTemplate(t){
   selectedTemplate=t;
-  ['birthday','newitems','promo','intro'].forEach(id=>document.getElementById('tpl-'+id).classList.toggle('selected',id===t));
+  TEMPLATES.forEach(tpl=>document.getElementById('tpl-'+tpl.id).classList.toggle('selected',tpl.id===t));
   updatePreview();
 }
 function buildMessage(clientName){
   const product=document.getElementById('msg-product').value.trim();
   const extra=document.getElementById('msg-extra').value.trim();
   const name=clientName||'[Client Name]';
-  let msg='';
-  if(selectedTemplate==='birthday'){
-    msg='Hi '+name+'! \uD83C\uDF82 It\'s your birthday month, which means you get 50% off all Kendra Scott at Dillard\'s \u2014 exclusively for you! Come celebrate yourself in store.';
-    if(product)msg+='\n\nI\'d love to show you the '+product+' \u2014 I think you\'ll love it!';
-  }else if(selectedTemplate==='newitems'){
-    msg='Hi '+name+'! Just wanted to let you know that new Kendra Scott pieces just arrived at Dillard\'s Tallahassee and they are stunning! \uD83D\uDC8E';
-    if(product)msg+='\n\nHighlight: the '+product+' just came in.';
-  }else if(selectedTemplate==='intro'){
-    msg='Hi '+name+'! My name is Andrea and I\'m the Kendra Scott specialist here at Dillard\'s Tallahassee. \uD83D\uDC4B\uD83C\uDFFD\n\nI just want to say \u2014 I\'m a real person, not a bot! Part of Dillard\'s mission is to make shopping feel personal and effortless, so think of me as your own personal Kendra Scott contact.\n\nI\'m available anytime you have questions, want to place an order, or just want to know what\'s new. Whenever we get pieces in that I think match your style, I\'ll send them your way so you never miss something you\'d love. \uD83D\uDC8E\n\nDon\'t hesitate to reach out \u2014 I\'m here to help!';
-    if(extra)msg+='\n\n'+extra;
-    msg+='\n\n\u2014 Andrea\nKendra Scott Specialist \u00b7 Dillard\'s Tallahassee';
-    return msg;
-  }else{
-    msg='Hi '+name+'! \uD83D\uDECD\uFE0F We have an exciting promotion going on at Kendra Scott in Dillard\'s Tallahassee right now \u2014 come check it out!';
-    if(product)msg+='\n\nFeatured: '+product;
-  }
-  if(extra)msg+='\n\n'+extra;
-  msg+='\n\n\u2014 Andrea\nKendra Scott Specialist \u00b7 Dillard\'s Tallahassee';
+  const template=TEMPLATES.find(t=>t.id===selectedTemplate)||TEMPLATES[0];
+  let msg=template.body;
+
+  // {{product:...}} blocks are included only if a product was entered,
+  // with __PRODUCT__ inside them replaced by the product name
+  msg=msg.replace(/\{\{product:([\s\S]*?)\}\}/g, (_,block)=>product?block.replace(/__PRODUCT__/g,product):'');
+
+  // {{extra}} is replaced with the extra note (prefixed with a blank line) or removed
+  msg=msg.replace(/\{\{extra\}\}/g, extra?'\n\n'+extra:'');
+
+  // Simple placeholders
+  msg=msg.replace(/\{\{name\}\}/g,name);
+  msg=msg.replace(/\{\{signature\}\}/g,SIGNATURE);
+
   return msg;
 }
 function updatePreview(){
@@ -917,8 +886,19 @@ function switchTab(t){
 function switchTabAndFilter(){switchTab('message');setTimeout(()=>{selectBirthdayClients();selectTemplate('birthday');},100);}
 function sendNewItems(){switchTab('message');setTimeout(()=>{selectAll();selectTemplate('newitems');},100);}
 
+renderTemplateList();
 renderAll();
 updatePreview();
+showWelcomeBanner();
+
+function showWelcomeBanner(){
+  const hour=new Date().getHours();
+  const greeting=hour<12?'Good morning':(hour<18?'Good afternoon':'Good evening');
+  const el=document.getElementById('welcome-banner');
+  el.textContent='\uD83D\uDC4B '+greeting+', Andrea! Welcome back.';
+  el.style.display='block';
+  setTimeout(()=>{el.style.display='none';},4000);
+}
 
 // ── Register Service Worker (PWA offline support) ──
 if ('serviceWorker' in navigator) {
