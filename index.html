@@ -129,6 +129,7 @@
   </div>
 
   <div id="welcome-banner" class="msg-success" style="display:none;margin-bottom:12px;font-size:14px"></div>
+  <div id="sheet-status" style="font-size:12px;text-align:right;margin-bottom:8px;min-height:16px;color:#888"></div>
 
   <div class="tabs">
     <button class="tab active" onclick="switchTab('clients')">&#128100; Clients</button>
@@ -498,9 +499,61 @@
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const NOW_MONTH=MONTHS[new Date().getMonth()];
 let clients=[];
-try{clients=JSON.parse(localStorage.getItem('ks_clients')||'[]');}catch(e){clients=[];}
 let selectedRecipients=new Set();
 let attachedImageDataUrl=null;
+
+// ============================================================
+// GOOGLE SHEETS SYNC
+// ============================================================
+const SHEET_URL='https://script.google.com/macros/s/AKfycbwokV599VTRuU4Hpk8kFzkv6eMcjw4eGH2cKlUHvydbq2OVw6CY1EhnIAizGr4cmLs9/exec';
+
+async function loadFromSheet(){
+  showSheetStatus('loading');
+  try{
+    const res=await fetch(SHEET_URL);
+    const data=await res.json();
+    clients=data.map(r=>({
+      id:r.id||Date.now()+Math.random(),
+      fname:r.fname||'',
+      lname:r.lname||'',
+      phone:r.phone||'',
+      bday:r.bday||'',
+      notes:r.notes||'',
+      wishlist:r.wishlist||'',
+      lastContacted:r.lastContacted?Number(r.lastContacted):null
+    }));
+    showSheetStatus('ok');
+    renderAll();
+    renderTemplateList();
+    updatePreview();
+    showWelcomeBanner();
+  }catch(e){
+    showSheetStatus('error');
+  }
+}
+
+async function save(){
+  showSheetStatus('saving');
+  try{
+    await fetch(SHEET_URL,{
+      method:'POST',
+      body:JSON.stringify({action:'save',clients}),
+      headers:{'Content-Type':'application/json'}
+    });
+    showSheetStatus('ok');
+  }catch(e){
+    showSheetStatus('error');
+  }
+}
+
+function showSheetStatus(state){
+  const el=document.getElementById('sheet-status');
+  if(!el)return;
+  if(state==='loading'){el.textContent='⏳ Loading clients...';el.style.color='#888';}
+  else if(state==='saving'){el.textContent='💾 Saving...';el.style.color='#888';}
+  else if(state==='ok'){el.textContent='✓ Synced with Google Sheets';el.style.color='#3b6d11';setTimeout(()=>{el.textContent='';},3000);}
+  else if(state==='error'){el.textContent='⚠️ Sync failed — check your connection';el.style.color='#c0392b';}
+}
 
 // ============================================================
 // MESSAGE TEMPLATES (config-driven)
@@ -548,7 +601,6 @@ const TEMPLATES=[
 ];
 let selectedTemplate=TEMPLATES[0].id;
 
-function save(){try{localStorage.setItem('ks_clients',JSON.stringify(clients));}catch(e){}}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function initials(f,l){return((f||'')[0]||'').toUpperCase()+((l||'')[0]||'').toUpperCase();}
 
@@ -886,10 +938,8 @@ function switchTab(t){
 function switchTabAndFilter(){switchTab('message');setTimeout(()=>{selectBirthdayClients();selectTemplate('birthday');},100);}
 function sendNewItems(){switchTab('message');setTimeout(()=>{selectAll();selectTemplate('newitems');},100);}
 
-renderTemplateList();
-renderAll();
-updatePreview();
-showWelcomeBanner();
+// Kick off — load from Google Sheets on startup
+loadFromSheet();
 
 function showWelcomeBanner(){
   const hour=new Date().getHours();
