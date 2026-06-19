@@ -535,11 +535,8 @@ async function loadFromSheet(){
 async function save(){
   showSheetStatus('saving');
   try{
-    await fetch(SHEET_URL,{
-      method:'POST',
-      body:JSON.stringify({action:'save',clients}),
-      headers:{'Content-Type':'application/json'}
-    });
+    const data=encodeURIComponent(JSON.stringify(clients));
+    await fetch(SHEET_URL+'?action=save&data='+data);
     showSheetStatus('ok');
   }catch(e){
     showSheetStatus('error');
