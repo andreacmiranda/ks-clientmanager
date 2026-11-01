@@ -1,0 +1,1029 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="KS Manager">
+<meta name="theme-color" content="#D4537E">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Kendra Scott Client Manager</title>
+<style>
+  :root{
+    --brand:#D4537E; --brand-dark:#B8395F; --brand-tint:#FBEAF0; --brand-tint-2:#FDF6F9;
+    --ink:#1a1a1a; --muted:#8a8a8a; --faint:#aaa;
+    --line:#eee; --line-2:#f4f4f4; --card:#fff; --bg:#fafafa;
+    --vip:#C9A227; --vip-tint:#FBF3D9;
+    --ok:#3b6d11; --ok-bg:#eaf3de; --err:#c0392b; --err-bg:#fdecea;
+    --nav-h:64px;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--ink); }
+  button{ font-family:inherit; }
+  .app{ max-width:640px; margin:0 auto; padding:1rem 1rem calc(var(--nav-h) + env(safe-area-inset-bottom) + 20px); }
+
+  /* Header */
+  .header{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .header-logo{ width:38px; height:38px; border-radius:11px; background:var(--brand); display:flex; align-items:center; justify-content:center; font-size:19px; }
+  .header h1{ font-size:17px; font-weight:650; letter-spacing:-0.01em; }
+  .header p{ font-size:12px; color:var(--muted); margin-top:1px; }
+
+  /* Bottom nav */
+  .bottom-nav{ position:fixed; bottom:0; left:0; right:0; height:calc(var(--nav-h) + env(safe-area-inset-bottom)); padding-bottom:env(safe-area-inset-bottom);
+    background:rgba(255,255,255,0.92); backdrop-filter:saturate(180%) blur(12px); -webkit-backdrop-filter:saturate(180%) blur(12px);
+    border-top:1px solid var(--line); display:flex; z-index:50; }
+  .nav-btn{ flex:1; border:none; background:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:var(--faint); cursor:pointer; padding:6px 0; transition:color .15s; }
+  .nav-btn .ic{ font-size:20px; line-height:1; }
+  .nav-btn .lb{ font-size:10.5px; font-weight:500; letter-spacing:.01em; }
+  .nav-btn.active{ color:var(--brand); }
+  .nav-btn.active .ic{ transform:translateY(-1px); }
+  .nav-badge{ position:absolute; top:6px; margin-left:16px; min-width:16px; height:16px; padding:0 4px; border-radius:9px; background:var(--brand); color:#fff; font-size:10px; font-weight:700; display:none; align-items:center; justify-content:center; }
+
+  .panel{ display:none; } .panel.active{ display:block; animation:fade .2s ease; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+  @media (prefers-reduced-motion:reduce){ .panel.active{ animation:none; } }
+
+  /* Cards + form */
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:1rem 1.1rem; margin-bottom:12px; }
+  .section-title{ font-size:11px; font-weight:700; color:var(--muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.06em; }
+  .row{ display:flex; gap:10px; margin-bottom:10px; }
+  .field{ flex:1; min-width:0; }
+  .field label{ font-size:12px; color:var(--muted); display:block; margin-bottom:4px; }
+  input,select{ width:100%; font-size:15px; padding:10px 11px; border:1px solid #ddd; border-radius:10px; outline:none; background:#fff; color:var(--ink); }
+  input:focus,select:focus{ border-color:var(--brand); box-shadow:0 0 0 3px var(--brand-tint); }
+  .btn{ padding:10px 16px; border-radius:10px; font-size:14px; cursor:pointer; font-weight:600; transition:all .15s; border:none; }
+  .btn-primary{ background:var(--brand); color:#fff; }
+  .btn-primary:active{ background:var(--brand-dark); }
+  .btn-ghost{ background:#fff; border:1px solid #ddd; color:var(--ink); font-weight:500; }
+  .btn-ghost:active{ background:#f5f5f5; }
+  .btn-danger{ background:none; border:1px solid var(--line); color:var(--err); font-size:13px; padding:8px 14px; border-radius:9px; cursor:pointer; font-weight:500; }
+  .link-btn{ background:none; border:none; color:var(--brand); font-size:13px; cursor:pointer; text-decoration:underline; padding:6px; }
+
+  /* Stats */
+  .stat-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px; }
+  .stat{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px 8px; text-align:center; }
+  .stat-num{ font-size:22px; font-weight:700; color:var(--brand); letter-spacing:-0.02em; }
+  .stat-label{ font-size:10.5px; color:var(--muted); margin-top:3px; line-height:1.2; }
+
+  /* Filters */
+  .filter-row{ display:flex; gap:8px; margin-bottom:10px; align-items:center; }
+  .filter-row input{ flex:1; }
+  .chip-row{ display:flex; gap:7px; overflow-x:auto; padding-bottom:2px; margin-bottom:10px; scrollbar-width:none; }
+  .chip-row::-webkit-scrollbar{ display:none; }
+  .chip{ flex:0 0 auto; font-size:12.5px; padding:6px 12px; border-radius:20px; border:1px solid #e2e2e2; background:#fff; color:#555; cursor:pointer; white-space:nowrap; font-weight:500; transition:all .12s; }
+  .chip.active{ background:var(--brand); border-color:var(--brand); color:#fff; }
+
+  /* Client list */
+  .client-row{ display:flex; align-items:center; gap:12px; padding:11px 12px; background:#fff; border:1px solid var(--line); border-radius:12px; margin-bottom:8px; cursor:pointer; transition:border-color .12s, transform .05s; }
+  .client-row:active{ transform:scale(0.995); border-color:var(--brand); }
+  .client-row.bday-highlight{ background:var(--brand-tint-2); border-color:#f2c9d9; }
+  .avatar{ width:42px; height:42px; border-radius:50%; background:var(--brand-tint); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600; color:#993556; flex-shrink:0; position:relative; }
+  .avatar.vip{ box-shadow:0 0 0 2px var(--vip); }
+  .client-info{ flex:1; min-width:0; }
+  .client-name{ font-size:15px; font-weight:600; display:flex; align-items:center; gap:6px; }
+  .client-meta{ font-size:12.5px; color:var(--muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .client-tags{ display:flex; gap:5px; margin-top:5px; flex-wrap:wrap; }
+  .chevron{ color:#ccc; font-size:18px; flex-shrink:0; }
+
+  /* Badges / tags */
+  .badge{ display:inline-flex; align-items:center; gap:3px; padding:2px 8px; border-radius:20px; font-size:10.5px; font-weight:600; background:var(--brand-tint); color:#993556; white-space:nowrap; }
+  .badge.vip{ background:var(--vip-tint); color:#8a6d10; }
+  .badge.seg{ background:#eef3f0; color:#3e6b55; }
+  .badge.bday{ background:var(--brand); color:#fff; }
+  .badge.due{ background:var(--err-bg); color:var(--err); }
+
+  /* Detail sheet */
+  .sheet-backdrop{ position:fixed; inset:0; background:rgba(20,10,15,0.4); z-index:100; opacity:0; pointer-events:none; transition:opacity .2s; }
+  .sheet-backdrop.open{ opacity:1; pointer-events:auto; }
+  .sheet{ position:fixed; left:0; right:0; bottom:0; max-width:640px; margin:0 auto; background:#fff; border-radius:20px 20px 0 0; z-index:101;
+    transform:translateY(100%); transition:transform .25s cubic-bezier(.32,.72,0,1); max-height:90vh; overflow-y:auto; padding:0 1.1rem calc(1.5rem + env(safe-area-inset-bottom)); }
+  .sheet.open{ transform:translateY(0); }
+  @media (prefers-reduced-motion:reduce){ .sheet,.sheet-backdrop{ transition:none; } }
+  .sheet-handle{ width:38px; height:4px; border-radius:4px; background:#e0e0e0; margin:10px auto 4px; }
+  .sheet-head{ position:sticky; top:0; background:#fff; padding-top:6px; padding-bottom:12px; display:flex; align-items:center; gap:12px; z-index:2; }
+  .sheet-avatar{ width:52px; height:52px; border-radius:50%; background:var(--brand-tint); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:600; color:#993556; flex-shrink:0; }
+  .sheet-avatar.vip{ box-shadow:0 0 0 2px var(--vip); }
+  .sheet-name{ font-size:19px; font-weight:700; letter-spacing:-0.01em; }
+  .sheet-sub{ font-size:13px; color:var(--muted); margin-top:2px; }
+  .sheet-close{ margin-left:auto; width:32px; height:32px; border-radius:50%; border:none; background:#f2f2f2; color:#666; font-size:18px; cursor:pointer; flex-shrink:0; }
+  .detail-actions{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:4px 0 16px; }
+  .detail-actions .btn{ width:100%; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .kv{ display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid var(--line-2); font-size:14px; }
+  .kv:last-child{ border-bottom:none; }
+  .kv .k{ color:var(--muted); }
+  .kv .v{ font-weight:500; text-align:right; }
+  .toggle-vip{ display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border:1px solid var(--vip); background:var(--vip-tint); border-radius:12px; margin:12px 0; }
+  .toggle-vip .lbl{ font-size:14px; font-weight:600; color:#8a6d10; }
+  .switch{ position:relative; width:46px; height:27px; flex-shrink:0; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .slider{ position:absolute; inset:0; background:#ccc; border-radius:20px; transition:.2s; cursor:pointer; }
+  .slider:before{ content:""; position:absolute; height:21px; width:21px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; }
+  .switch input:checked + .slider{ background:var(--vip); }
+  .switch input:checked + .slider:before{ transform:translateX(19px); }
+  .log-item{ display:flex; align-items:center; gap:9px; padding:7px 0; font-size:13px; color:#555; border-bottom:1px solid var(--line-2); }
+  .log-item:last-child{ border-bottom:none; }
+  .log-dot{ width:7px; height:7px; border-radius:50%; background:var(--brand); flex-shrink:0; }
+
+  /* Message tab */
+  .template-card{ border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:8px; cursor:pointer; transition:all .15s; }
+  .template-card:active,.template-card.selected{ border-color:var(--brand); background:var(--brand-tint); }
+  .template-title{ font-size:14px; font-weight:600; margin-bottom:3px; }
+  .template-preview{ font-size:12.5px; color:var(--muted); }
+  .checkbox-list{ max-height:220px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:6px; }
+  .checkbox-item{ display:flex; align-items:center; gap:9px; padding:7px 6px; font-size:14px; cursor:pointer; border-radius:8px; }
+  .checkbox-item:active{ background:#f7f7f7; }
+  .checkbox-item input[type=checkbox]{ width:18px; height:18px; flex-shrink:0; accent-color:var(--brand); }
+  .drop-zone{ border:2px dashed #ddd; border-radius:12px; padding:22px; text-align:center; cursor:pointer; transition:all .15s; position:relative; }
+  .drop-zone:active,.drop-zone.dragover{ border-color:var(--brand); background:var(--brand-tint); }
+  .drop-zone input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+  .drop-zone-text{ font-size:13px; color:var(--muted); pointer-events:none; }
+  .img-preview-wrap{ position:relative; display:inline-block; margin-top:10px; }
+  .img-preview{ max-width:100%; max-height:200px; border-radius:12px; border:1px solid var(--line); display:block; }
+  .img-remove{ position:absolute; top:-8px; right:-8px; width:24px; height:24px; border-radius:50%; background:var(--brand); color:#fff; border:none; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; }
+  .bubble-wrap{ background:#f0f0f2; border-radius:14px; padding:12px; margin:12px 0; }
+  .bubble{ background:var(--brand); color:#fff; border-radius:18px 18px 4px 18px; padding:11px 14px; display:inline-block; max-width:88%; }
+  .bubble-img{ max-width:100%; border-radius:14px 14px 2px 14px; display:block; margin-bottom:6px; }
+  .bubble-text{ font-size:14px; line-height:1.5; white-space:pre-wrap; word-break:break-word; }
+  .bubble-meta{ font-size:11px; color:var(--faint); margin-top:6px; text-align:right; }
+  .how-to{ background:var(--bg); border-radius:10px; padding:12px 14px; margin-bottom:10px; }
+  .how-to-step{ display:flex; gap:10px; align-items:flex-start; padding:5px 0; font-size:13px; color:#666; }
+  .step-num{ width:20px; height:20px; border-radius:50%; background:var(--brand); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+  .search-result-link{ display:block; text-decoration:none; border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:8px; transition:border-color .15s; }
+  .search-result-link:active{ border-color:var(--brand); }
+
+  /* Info tab */
+  .info-title{ font-size:15px; font-weight:700; margin-bottom:10px; padding-bottom:8px; border-bottom:2px solid var(--brand-tint); display:flex; align-items:center; gap:8px; }
+  .birthstone-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+  .birthstone-card{ border:1px solid var(--line); border-radius:12px; padding:10px 12px; display:flex; align-items:center; gap:10px; }
+  .birthstone-card.current-month{ border-color:var(--brand); background:var(--brand-tint); }
+  .stone-dot{ width:34px; height:34px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:17px; }
+  .stone-info{ flex:1; min-width:0; }
+  .stone-month{ font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; }
+  .stone-name{ font-size:13px; font-weight:600; }
+  .stone-color{ font-size:11px; color:var(--muted); }
+  .stone-ks-link{ font-size:11px; color:var(--brand); text-decoration:none; display:block; margin-top:2px; }
+  .metal-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .metal-card{ border:1px solid var(--line); border-radius:12px; padding:10px; text-align:center; }
+  .metal-swatch{ width:36px; height:36px; border-radius:50%; margin:0 auto 6px; border:1px solid var(--line); }
+  .metal-name{ font-size:12px; font-weight:600; }
+  .metal-desc{ font-size:10.5px; color:var(--muted); margin-top:2px; line-height:1.4; }
+  .selling-point{ display:flex; gap:10px; align-items:flex-start; padding:9px 0; border-bottom:1px solid var(--line-2); }
+  .selling-point:last-child{ border-bottom:none; }
+  .sp-icon{ font-size:20px; flex-shrink:0; width:28px; text-align:center; }
+  .sp-title{ font-size:13px; font-weight:600; margin-bottom:2px; }
+  .sp-desc{ font-size:12px; color:#555; line-height:1.5; }
+  .bestseller-row{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--line-2); }
+  .bestseller-row:last-child{ border-bottom:none; }
+  .bs-rank{ width:24px; height:24px; border-radius:50%; background:var(--brand); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .bs-info{ flex:1; } .bs-name{ font-size:13px; font-weight:600; } .bs-detail{ font-size:11px; color:var(--muted); margin-top:1px; line-height:1.4; }
+  .bs-price{ font-size:12px; font-weight:600; color:var(--brand); }
+  .tip-box{ background:var(--brand-tint); border-left:3px solid var(--brand); border-radius:0 10px 10px 0; padding:10px 12px; margin:10px 0 0; }
+  .tip-box p{ font-size:12px; color:#5a1a30; line-height:1.6; }
+
+  /* Bulk add + template editor */
+  textarea{ width:100%; font-size:15px; padding:10px 11px; border:1px solid #ddd; border-radius:10px; outline:none; background:#fff; color:var(--ink); font-family:inherit; resize:vertical; }
+  textarea:focus{ border-color:var(--brand); box-shadow:0 0 0 3px var(--brand-tint); }
+  .bulk-row{ border:1px solid var(--line); border-radius:12px; padding:10px; margin-bottom:8px; display:flex; gap:10px; align-items:flex-start; }
+  .bulk-row.dupe{ background:var(--vip-tint); }
+  .bulk-row.off{ opacity:.45; }
+  .bulk-row input[type=checkbox]{ width:20px; height:20px; margin-top:8px; accent-color:var(--brand); flex:0 0 auto; }
+  .bulk-fields{ flex:1; min-width:0; display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .bulk-fields input,.bulk-fields select{ font-size:14px; padding:8px 9px; }
+  .bulk-tag{ grid-column:1/-1; font-size:11px; color:#8a6d10; font-weight:600; }
+  .bulk-hint{ font-size:12px; color:var(--muted); margin-bottom:10px; line-height:1.45; }
+  .template-card{ position:relative; }
+  .tpl-edit{ position:absolute; top:8px; right:8px; background:#fff; border:1px solid var(--line); border-radius:8px; font-size:13px; padding:4px 8px; cursor:pointer; }
+  .tpl-badge{ font-size:10px; font-weight:700; color:var(--brand); text-transform:uppercase; letter-spacing:.05em; margin-left:6px; }
+  .tpl-chips{ display:flex; gap:6px; flex-wrap:wrap; margin:6px 0 10px; }
+  .tpl-chips button{ background:var(--brand-tint-2); border:1px solid var(--brand-tint); color:var(--brand-dark); border-radius:999px; font-size:12px; padding:5px 10px; cursor:pointer; }
+  .msg-success{ background:var(--ok-bg); color:var(--ok); padding:9px 12px; border-radius:10px; font-size:13px; margin-top:8px; display:none; }
+  .msg-error{ background:var(--err-bg); color:var(--err); padding:9px 12px; border-radius:10px; font-size:13px; margin-top:8px; display:none; }
+  .empty-state{ text-align:center; padding:2rem 1rem; color:var(--faint); font-size:14px; }
+</style>
+
+<div class="app">
+  <div class="header">
+    <div class="header-logo">&#x1F48E;</div>
+    <div>
+      <h1>Client Manager</h1>
+      <p>Kendra Scott &middot; Dillard's Tallahassee</p>
+    </div>
+  </div>
+
+  <div id="welcome-banner" class="msg-success" style="margin-bottom:12px;font-size:14px"></div>
+
+  <!-- ===================== CLIENTS ===================== -->
+  <div id="panel-clients" class="panel active">
+    <div class="stat-row">
+      <div class="stat"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total clients</div></div>
+      <div class="stat"><div class="stat-num" id="stat-bday">0</div><div class="stat-label">Birthdays this month</div></div>
+      <div class="stat"><div class="stat-num" id="stat-vip">0</div><div class="stat-label">VIP clients</div></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Add a client</div>
+      <div class="row">
+        <div class="field"><label>First name</label><input type="text" id="new-fname" placeholder="Sarah"></div>
+        <div class="field"><label>Last name</label><input type="text" id="new-lname" placeholder="Johnson"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Phone</label><input type="tel" id="new-phone" placeholder="850-555-0100"></div>
+        <div class="field"><label>Birthday month</label>
+          <select id="new-bday"><option value="">&#8212;</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Segment</label>
+          <select id="new-segment"><option value="">&#8212;</option><option>Teen</option><option>College</option><option>Adult</option><option>Middle School</option></select>
+        </div>
+        <div class="field"><label>Interested in</label><input type="text" id="new-wishlist" placeholder="Elisa pendant, gold hoops"></div>
+      </div>
+      <div class="row" style="align-items:center">
+        <div class="field"><label>Notes</label><input type="text" id="new-notes" placeholder="Prefers gold, gift shopper"></div>
+        <label class="checkbox-item" style="flex:0 0 auto;font-size:13px;font-weight:600;color:#8a6d10;margin-top:14px">
+          <input type="checkbox" id="new-vip"> &#9733; VIP
+        </label>
+      </div>
+      <button class="btn btn-primary" onclick="addClient()" style="width:100%">+ Add client</button>
+      <div class="msg-success" id="add-success">&#10003; Client added</div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">&#9889; Bulk add</div>
+      <p class="bulk-hint">One client per line: <b>name, phone, birthday month</b> (any order). From a handwritten list: open the photo &rarr; long-press the text (Live Text) &rarr; Copy &rarr; paste here.</p>
+      <textarea id="bulk-text" rows="5" placeholder="Sarah Johnson 850-555-0100 March&#10;Maria Lopez, 8505550199, 7/14"></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="bulkParseText()" style="flex:1">&#128221; Read list</button>
+        <label class="btn btn-ghost" style="flex:1;position:relative;overflow:hidden;cursor:pointer;text-align:center">&#128247; Scan photo (AI)
+          <input type="file" accept="image/*" onchange="bulkScanPhoto(this.files[0]);this.value=''" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label>
+      </div>
+      <button class="link-btn" onclick="setAiKey()" style="margin-top:4px">AI key settings</button>
+      <div class="msg-error" id="bulk-error"></div>
+      <div id="bulk-review" style="margin-top:10px"></div>
+    </div>
+
+    <div class="filter-row">
+      <input type="text" id="search-clients" placeholder="Search name, phone, notes..." oninput="renderClients()">
+      <select id="filter-month" onchange="renderClients()" style="width:auto;font-size:13px;flex:0 0 auto"><option value="">All months</option></select>
+    </div>
+    <div class="chip-row" id="quick-filters">
+      <button class="chip active" data-f="all" onclick="setQuickFilter('all')">Everyone</button>
+      <button class="chip" data-f="vip" onclick="setQuickFilter('vip')">&#9733; VIP</button>
+      <button class="chip" data-f="bday" onclick="setQuickFilter('bday')">&#127874; Birthday this month</button>
+      <button class="chip" data-f="followup" onclick="setQuickFilter('followup')">&#9203; Needs follow-up</button>
+    </div>
+    <div id="client-list"></div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="section-title">Backup &amp; restore</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Your list lives only on this device. Export a backup regularly so you never lose it.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="exportClients()">&#11015;&#65039; Export (.json)</button>
+        <label class="btn btn-ghost" style="position:relative;overflow:hidden;cursor:pointer">&#11014;&#65039; Import (.json)
+          <input type="file" accept=".json,application/json" onchange="importClientsFile(this.files[0])" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label>
+      </div>
+      <div class="msg-success" id="backup-success"></div>
+      <div class="msg-error" id="backup-error"></div>
+    </div>
+  </div>
+
+  <!-- ===================== MESSAGE ===================== -->
+  <div id="panel-message" class="panel">
+    <div class="card">
+      <div class="section-title">1 &middot; Choose a template</div>
+      <div id="template-list"></div>
+      <button class="btn btn-ghost" onclick="openTplEditor(null)" style="width:100%;margin-top:4px">+ New template</button>
+      <div id="tpl-editor" style="display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
+        <div class="section-title" id="tpl-editor-title">New template</div>
+        <div class="row">
+          <div class="field" style="flex:0 0 64px"><label>Emoji</label><input id="tpl-icon" maxlength="4" placeholder="&#127873;"></div>
+          <div class="field"><label>Name</label><input id="tpl-title" placeholder="Raffle last day"></div>
+        </div>
+        <div class="field"><label>Message</label>
+          <textarea id="tpl-body" rows="7" placeholder="Hi {{name}}! ..."></textarea></div>
+        <div class="tpl-chips">
+          <button type="button" onclick="tplInsert('{{name}}')">+ Client name</button>
+          <button type="button" onclick="tplInsert('{{product}}')">+ Product</button>
+          <button type="button" onclick="tplInsert('{{extra}}')">+ Extra note</button>
+          <button type="button" onclick="tplInsert('{{signature}}')">+ Signature</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="saveTpl()" style="flex:1">&#128190; Save</button>
+          <button class="btn btn-ghost" onclick="closeTplEditor()">Cancel</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px">
+          <button class="link-btn" id="tpl-reset" onclick="resetTpl()">Reset to original</button>
+          <button class="link-btn" id="tpl-delete" onclick="deleteTpl()" style="color:var(--err)">Delete template</button>
+        </div>
+        <div class="msg-error" id="tpl-error"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">2 &middot; Add product image</div>
+      <div class="how-to">
+        <div class="how-to-step"><div class="step-num">1</div><span>Open the product on <strong>Products</strong> tab &rarr; Dillard's page</span></div>
+        <div class="how-to-step"><div class="step-num">2</div><span>Save the product photo (long-press &rarr; Save, or screenshot)</span></div>
+        <div class="how-to-step"><div class="step-num">3</div><span>Drop, paste, or tap below to attach it</span></div>
+      </div>
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" accept="image/*" id="img-file-input" onchange="handleFile(this.files[0])">
+        <div class="drop-zone-text"><div style="font-size:28px;margin-bottom:6px">&#128247;</div><strong>Tap to upload</strong>, drop, or paste</div>
+      </div>
+      <div id="img-preview-container" style="display:none;margin-top:10px">
+        <div class="img-preview-wrap"><img id="img-preview" class="img-preview" src="" alt="Product preview"><button class="img-remove" onclick="removeImage()">&times;</button></div>
+        <div style="font-size:12px;color:var(--ok);margin-top:6px">&#10003; Image ready</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">3 &middot; Customize</div>
+      <div class="field" style="margin-bottom:10px"><label>Product name (optional)</label><input type="text" id="msg-product" placeholder="Elisa Pendant Necklace" oninput="updatePreview()"></div>
+      <div class="field"><label>Extra note (optional)</label><input type="text" id="msg-extra" placeholder="Available in rose gold and white drusy" oninput="updatePreview()"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">4 &middot; Select recipients</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px" onclick="selectBirthdayClients()">&#127874; Birthdays</button>
+        <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px" onclick="selectVIP()">&#9733; VIPs</button>
+        <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px" onclick="selectAll()">All</button>
+        <button class="link-btn" onclick="clearAll()">Clear</button>
+      </div>
+      <div class="checkbox-list" id="recipient-list"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">5 &middot; Preview &amp; send</div>
+      <div class="bubble-wrap">
+        <div class="bubble"><img id="bubble-img" class="bubble-img" src="" alt="" style="display:none;max-height:160px;object-fit:cover"><div class="bubble-text" id="msg-preview">Pick a template to preview.</div></div>
+        <div class="bubble-meta">iMessage preview</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="copyMessage()">&#128203; Copy text</button>
+        <button class="btn btn-ghost" onclick="copyImage()" id="btn-copy-img" style="display:none">&#128247; Copy image</button>
+        <button class="btn btn-ghost" onclick="openTexts()">&#128172; Open Messages</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6">Tip: copy the image first &rarr; open Messages &rarr; paste image &rarr; paste text under it.</div>
+      <div class="msg-success" id="copy-success">&#10003; Copied</div>
+    </div>
+  </div>
+
+  <!-- ===================== PRODUCTS ===================== -->
+  <div id="panel-products" class="panel">
+    <div class="card">
+      <div class="section-title">Search Dillard's for Kendra Scott</div>
+      <div class="row" style="align-items:flex-end;margin-bottom:0">
+        <div class="field"><label>Product name</label><input type="text" id="product-query" placeholder="Elisa Pendant Necklace" onkeydown="if(event.key==='Enter')searchProduct()"></div>
+        <button class="btn btn-primary" onclick="searchProduct()" style="flex:0 0 auto">&#128269;</button>
+      </div>
+    </div>
+    <div id="product-results"></div>
+    <div class="card" style="background:var(--bg)">
+      <div class="section-title" style="margin-bottom:6px">Workflow</div>
+      <ol style="font-size:13px;color:#666;padding-left:1.2rem;line-height:1.9">
+        <li>Search &rarr; open on Dillard's</li>
+        <li>Save the product photo</li>
+        <li>Go to <strong>Message</strong> &rarr; attach it in step 2</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ===================== REMINDERS ===================== -->
+  <div id="panel-reminders" class="panel">
+    <div class="card">
+      <div class="section-title" id="bday-title">This month's birthdays</div>
+      <div id="bday-list"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Needs a follow-up</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Clients you haven't contacted in 30+ days (or ever).</p>
+      <div id="followup-list"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Quick actions</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-ghost" onclick="switchTabAndFilter()">&#127874; Message all birthday clients</button>
+        <button class="btn btn-ghost" onclick="sendNewItems()">&#10024; Announce new arrivals to all</button>
+      </div>
+    </div>
+    <div class="card" style="background:var(--bg)">
+      <p style="font-size:13px;color:#666;line-height:1.6">Kendra Scott offers <strong>50% off</strong> during a client's birthday month. Check this tab at the start of each month.</p>
+    </div>
+  </div>
+
+  <!-- ===================== INFO ===================== -->
+  <div id="panel-info" class="panel">
+    <div class="card">
+      <div class="info-title">&#128142; Birthstones by Month</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">When a client mentions their birthday, suggest the matching Elisa stone. Current month is highlighted.</p>
+      <div class="birthstone-grid" id="birthstone-grid"></div>
+      <div class="tip-box"><p><strong>Sales tip:</strong> "Since your birthday is in [month], the [stone] Elisa would be so meaningful &mdash; it's your birthstone! And with your 50% birthday discount, now's the perfect time."</p></div>
+    </div>
+    <div class="card">
+      <div class="info-title">&#9889; Metals &amp; Finishes</div>
+      <div class="metal-grid">
+        <div class="metal-card"><div class="metal-swatch" style="background:linear-gradient(135deg,#f5d87a,#c8960c)"></div><div class="metal-name">Gold</div><div class="metal-desc">14K gold-plated brass. Warm, classic.</div></div>
+        <div class="metal-card"><div class="metal-swatch" style="background:linear-gradient(135deg,#e8e8e8,#aaa)"></div><div class="metal-name">Rhodium</div><div class="metal-desc">Silver-tone. Resists tarnish.</div></div>
+        <div class="metal-card"><div class="metal-swatch" style="background:linear-gradient(135deg,#f7c5b0,#c47a5a)"></div><div class="metal-name">Rose Gold</div><div class="metal-desc">Soft copper-pink. Very popular.</div></div>
+        <div class="metal-card"><div class="metal-swatch" style="background:linear-gradient(135deg,#555,#222)"></div><div class="metal-name">Gunmetal</div><div class="metal-desc">Dark charcoal. Edgy, modern.</div></div>
+        <div class="metal-card"><div class="metal-swatch" style="background:linear-gradient(135deg,#e8d5a0,#b89a4a)"></div><div class="metal-name">Vermeil</div><div class="metal-desc">18K gold over silver. Durable.</div></div>
+        <div class="metal-card"><div class="metal-swatch" style="background:linear-gradient(135deg,#f0f0f0,#d0d0d0);border:1px solid #ddd"></div><div class="metal-name">14K Solid</div><div class="metal-desc">Fine line. Won't tarnish.</div></div>
+      </div>
+      <div class="tip-box"><p><strong>Care tip:</strong> Remove jewelry before swimming, showering, or applying lotion/perfume. Store flat in a soft pouch. Wipe with a soft cloth after wearing.</p></div>
+    </div>
+    <div class="card">
+      <div class="info-title">&#127775; Key Selling Points</div>
+      <div class="selling-point"><div class="sp-icon">&#128104;&#8205;&#128187;</div><div><div class="sp-title">Founded by a single mom with $500</div><div class="sp-desc">Started in 2002 from a home in Austin, TX. An American brand built on passion, not corporate money.</div></div></div>
+      <div class="selling-point"><div class="sp-icon">&#127381;</div><div><div class="sp-title">Color Bar&trade; customization</div><div class="sp-desc">Clients choose their stone, metal, and style. Makes it personal &mdash; great for gifts.</div></div></div>
+      <div class="selling-point"><div class="sp-icon">&#128142;</div><div><div class="sp-title">Real semi-precious stones</div><div class="sp-desc">Turquoise, rose quartz, amethyst, labradorite, moonstone &mdash; real stones at an accessible price.</div></div></div>
+      <div class="selling-point"><div class="sp-icon">&#128176;</div><div><div class="sp-title">Luxury feel, accessible price</div><div class="sp-desc">Most pieces $50&ndash;$150. Fine-jewelry experience without the $500+ tag.</div></div></div>
+      <div class="selling-point"><div class="sp-icon">&#127873;</div><div><div class="sp-title">50% birthday discount &mdash; exclusive</div><div class="sp-desc">No other brand at Dillard's offers this. Creates urgency and a reason to come in that month.</div></div></div>
+      <div class="selling-point"><div class="sp-icon">&#128141;</div><div><div class="sp-title">Hypoallergenic options</div><div class="sp-desc">Rhodium-plated pieces suit clients with metal sensitivities.</div></div></div>
+    </div>
+    <div class="card">
+      <div class="info-title">&#127942; Best Sellers</div>
+      <div class="bestseller-row"><div class="bs-rank">1</div><div class="bs-info"><div class="bs-name">Elisa Pendant Necklace</div><div class="bs-detail">The #1 seller. Sells one every minute globally. 25+ colors, 3 lengths.</div></div><div class="bs-price">$55&ndash;$80</div></div>
+      <div class="bestseller-row"><div class="bs-rank">2</div><div class="bs-info"><div class="bs-name">Ellie Stud Earrings</div><div class="bs-detail">Classic oval studs. Often bought as a set with the Elisa.</div></div><div class="bs-price">$40&ndash;$60</div></div>
+      <div class="bestseller-row"><div class="bs-rank">3</div><div class="bs-info"><div class="bs-name">Ari Heart Pendant</div><div class="bs-detail">Top gift pick for Valentine's, anniversaries, Mother's Day.</div></div><div class="bs-price">$65&ndash;$85</div></div>
+      <div class="bestseller-row"><div class="bs-rank">4</div><div class="bs-info"><div class="bs-name">Lee Earrings</div><div class="bs-detail">Petite drops. Pairs perfectly with the Elisa.</div></div><div class="bs-price">$55&ndash;$70</div></div>
+      <div class="bestseller-row"><div class="bs-rank">5</div><div class="bs-info"><div class="bs-name">Mikki Pave Huggies</div><div class="bs-detail">Huggie hoops with pave stones. Top earring seller.</div></div><div class="bs-price">$60&ndash;$75</div></div>
+      <div class="tip-box"><p><strong>Stat to drop:</strong> "This necklace is so popular Kendra Scott sells one every single minute &mdash; the #1 seller since launch."</p></div>
+    </div>
+    <div class="card">
+      <div class="info-title">&#128172; Objection Handling</div>
+      <div class="selling-point"><div class="sp-icon">&#10067;</div><div><div class="sp-title">"Is it real gold/silver?"</div><div class="sp-desc">"Most pieces are gold- or rhodium-plated &mdash; that keeps the price accessible while still looking beautiful. We also carry a fine line in solid 14K gold."</div></div></div>
+      <div class="selling-point"><div class="sp-icon">&#10067;</div><div><div class="sp-title">"Will it tarnish?"</div><div class="sp-desc">"Rhodium-plated pieces resist tarnishing well. Keep it away from water, lotion, and perfume. I tell clients: jewelry on last, off first."</div></div></div>
+      <div class="selling-point"><div class="sp-icon">&#10067;</div><div><div class="sp-title">"It seems expensive."</div><div class="sp-desc">"For real semi-precious stones, it's actually accessible &mdash; most pieces are under $80, from a brand celebrities wear."</div></div></div>
+      <div class="selling-point"><div class="sp-icon">&#10067;</div><div><div class="sp-title">"Not sure which color."</div><div class="sp-desc">"That's what the Color Bar is for! We can swap the stone in store so you see which feels most like you."</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail sheet -->
+<div class="sheet-backdrop" id="sheet-backdrop" onclick="closeSheet()"></div>
+<div class="sheet" id="detail-sheet"><div id="detail-body"></div></div>
+
+<!-- Bottom nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-tab="clients" onclick="switchTab('clients')"><span class="ic">&#128100;</span><span class="lb">Clients</span></button>
+  <button class="nav-btn" data-tab="message" onclick="switchTab('message')"><span class="ic">&#128172;</span><span class="lb">Message</span></button>
+  <button class="nav-btn" data-tab="products" onclick="switchTab('products')"><span class="ic">&#128269;</span><span class="lb">Products</span></button>
+  <button class="nav-btn" data-tab="reminders" onclick="switchTab('reminders')"><span class="ic" style="position:relative">&#128197;<span class="nav-badge" id="rem-badge">0</span></span><span class="lb">Reminders</span></button>
+  <button class="nav-btn" data-tab="info" onclick="switchTab('info')"><span class="ic">&#128218;</span><span class="lb">Info</span></button>
+</nav>
+
+<script>
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const NOW_MONTH=MONTHS[new Date().getMonth()];
+const STORE_KEY='ks_clients_v9';
+
+// ============================================================
+// SEED DATA — all 30 clients (17 from old database + 13 new)
+// ============================================================
+const SEED_CLIENTS=[
+  {fname:'Victoria', lname:'Heuler', phone:'850-212-5549', bday:'', segment:'', notes:'', wishlist:'Classic bling'},
+  {fname:'Sarah', lname:'Stevens', phone:'850-519-2218', bday:'', segment:'', notes:'', wishlist:'Silver pendant necklace'},
+  {fname:'Margaret', lname:'Willis', phone:'850-459-6946', bday:'March', segment:'', notes:'', wishlist:''},
+  {fname:'Cathy', lname:'Williams', phone:'850-545-4078', bday:'March', segment:'', notes:'', wishlist:''},
+  {fname:'Laura', lname:'Mills', phone:'856-591-1614', bday:'August', segment:'', notes:'', wishlist:''},
+  {fname:'Cynthia', lname:'Haber', phone:'850-567-7547', bday:'August', segment:'', notes:'', wishlist:''},
+  {fname:'Madalynn', lname:'Edenfield', phone:'850-844-1326', bday:'June', segment:'Teen', notes:'', wishlist:''},
+  {fname:'Margaret', lname:'Ross', phone:'850-584-3600', bday:'June', segment:'Adult', notes:'Born 1953', wishlist:''},
+  {fname:'Hannah', lname:'Sareini', phone:'850-212-6091', bday:'April', segment:'Teen', notes:'', wishlist:''},
+  {fname:'Amber', lname:'Klappas', phone:'850-545-8436', bday:'January', segment:'Adult', notes:'', wishlist:''},
+  {fname:'Helene', lname:'', phone:'850-528-3942', bday:'', segment:'', notes:'', wishlist:''},
+  {fname:'Beth', lname:'Gross', phone:'812-658-3944', bday:'August', segment:'', notes:'', wishlist:''},
+  {fname:'Heather', lname:'Clearly', phone:'850-313-2436', bday:'May', segment:'Adult', notes:'', wishlist:''},
+  {fname:'Tatiana', lname:'Thompson', phone:'850-900-7430', bday:'June', segment:'College', notes:'', wishlist:''},
+  {fname:'Niveah', lname:'Thompson', phone:'850-459-1844', bday:'June', segment:'College', notes:'', wishlist:''},
+  {fname:'Lesley', lname:'Danford Thompson', phone:'334-790-6854', bday:'July', segment:'Adult', notes:'', wishlist:''},
+  {fname:'Madelynn', lname:'Coatney', phone:'850-819-2433', bday:'June', segment:'Middle School', notes:'', wishlist:''},
+  {fname:'Maya', lname:'Richardson', phone:'850-447-0896', bday:'August', segment:'', notes:'', wishlist:''},
+  {fname:'Amber', lname:'Burns', phone:'850-766-1092', bday:'August', segment:'', notes:'', wishlist:''},
+  {fname:'Leighton', lname:'Maphis', phone:'850-508-4841', bday:'August', segment:'', notes:'', wishlist:''},
+  {fname:'Marsha', lname:'Walker', phone:'850-524-8777', bday:'June', segment:'', notes:'', wishlist:''},
+  {fname:'Danielle', lname:'', phone:'407-766-1992', bday:'', segment:'', notes:'', wishlist:''},
+  {fname:'Natalie', lname:'Willis', phone:'863-254-0810', bday:'June', segment:'', notes:'', wishlist:''},
+  {fname:'Grace', lname:'Stalter', phone:'714-833-4989', bday:'June', segment:'', notes:'', wishlist:''},
+  {fname:'Mildred', lname:'Borden', phone:'850-566-5185', bday:'July', segment:'', notes:'', wishlist:''},
+  {fname:'Joyce', lname:'Daidone', phone:'478-278-0270', bday:'July', segment:'', notes:'', wishlist:''},
+  {fname:'Molly', lname:'Whelan', phone:'229-579-1929', bday:'June', segment:'', notes:'', wishlist:''},
+  {fname:'Samreen', lname:'Rana', phone:'347-506-8933', bday:'July', segment:'', notes:'', wishlist:''},
+  {fname:'Tracy', lname:'Davis-Martinez', phone:'850-322-9714', bday:'August', segment:'', notes:'', wishlist:''},
+  {fname:'Tamara', lname:'Carracno', phone:'253-326-7219', bday:'August', segment:'', notes:'', wishlist:''}
+];
+
+// Normalize any client record to the V9 shape
+function normalize(c,i){
+  return {
+    id: c.id || (1000+i),
+    fname: c.fname||'', lname: c.lname||'', phone: c.phone||'',
+    bday: c.bday||'', segment: c.segment||'',
+    notes: c.notes||'', wishlist: c.wishlist||'',
+    vip: !!c.vip,
+    contactLog: Array.isArray(c.contactLog) ? c.contactLog.slice()
+              : (c.lastContacted ? [c.lastContacted] : [])
+  };
+}
+
+let clients=[];
+(function loadClients(){
+  let raw=null;
+  try{ raw=JSON.parse(localStorage.getItem(STORE_KEY)||'null'); }catch(e){ raw=null; }
+  if(!raw || !Array.isArray(raw) || raw.length===0){
+    clients=SEED_CLIENTS.map((c,i)=>normalize({...c,id:i+1},i));
+    save();
+  }else{
+    clients=raw.map((c,i)=>normalize(c,i));
+  }
+})();
+
+let selectedRecipients=new Set();
+let attachedImageDataUrl=null;
+let quickFilter='all';
+let currentDetailId=null;
+
+// ============================================================
+// MESSAGE TEMPLATES (config-driven)
+//   {{name}} · {{product:...__PRODUCT__...}} · {{extra}} · {{signature}}
+// ============================================================
+const SIGNATURE='\u2014 Andrea\nKendra Scott Specialist \u00b7 Dillard\'s Tallahassee';
+const DEFAULT_TEMPLATES=[
+  {id:'birthday', icon:'\uD83C\uDF82', title:'Birthday discount reminder', preview:'50% off during their birthday month.',
+   body:'Hi {{name}}! \uD83C\uDF82 It\'s your birthday month, which means you get 50% off a piece from Kendra Scott at Dillard\'s \u2014 exclusively for you! Come celebrate yourself in store.{{product:\n\nI\'d love to show you the __PRODUCT__ \u2014 I think you\'ll love it!}}{{extra}}\n\n{{signature}}'},
+  {id:'newitems', icon:'\u2728', title:'New pieces arrived', preview:'Alert clients to new arrivals.',
+   body:'Hi {{name}}! Just wanted to let you know new Kendra Scott pieces just arrived at Dillard\'s Tallahassee and they are stunning! \uD83D\uDC8E{{product:\n\nHighlight: the __PRODUCT__ just came in.}}{{extra}}\n\n{{signature}}'},
+  {id:'promo', icon:'\uD83D\uDECD\uFE0F', title:'Promotion / sale', preview:'Announce a current promotion.',
+   body:'Hi {{name}}! \uD83D\uDECD\uFE0F We have an exciting promotion going on at Kendra Scott in Dillard\'s Tallahassee right now \u2014 come check it out!{{product:\n\nFeatured: __PRODUCT__}}{{extra}}\n\n{{signature}}'},
+  {id:'intro', icon:'\uD83D\uDC4B', title:'Introduction', preview:'Introduce yourself as their KS specialist.',
+   body:'Hi {{name}}! My name is Andrea and I\'m the Kendra Scott specialist here at Dillard\'s Tallahassee. \uD83D\uDC4B\uD83C\uDFFD\n\nI just want to say \u2014 I\'m a real person, not a bot! Think of me as your own personal Kendra Scott contact.\n\nWhenever we get pieces in that I think match your style, I\'ll send them your way so you never miss something you\'d love. \uD83D\uDC8E{{extra}}\n\n{{signature}}'},
+  {id:'dolly', icon:'🦋', title:'Dolly Parton x Kendra Scott', preview:'Show off the Dolly collab pieces.',
+   body:'Hi {{name}}! 🦋 The Dolly Parton x Kendra Scott pieces are here at Dillard\'s Tallahassee — butterflies, hearts, and all the sparkle you\'d expect from Dolly! ✨{{product:\n\nThe __PRODUCT__ is my favorite — I think it would look amazing on you.}}\n\nCome by and try them on before they\'re gone!{{extra}}\n\n{{signature}}'},
+  {id:'raffle', icon:'🎁', title:'Inheritance of Hope raffle', preview:'Last call to enter the basket raffle.',
+   body:'Hi {{name}}! 🎁 Today is the LAST day to enter our Kendra Scott basket raffle benefiting Inheritance of Hope! 💛{{product:\n\nThe basket includes the __PRODUCT__ and more.}}\n\nStop by the Kendra Scott counter at Dillard\'s Tallahassee before we close today to get your entry in.{{extra}}\n\n{{signature}}'}
+];
+const TPL_STORE='ks_templates_v1';
+function loadTemplates(){
+  let saved=null; try{ saved=JSON.parse(localStorage.getItem(TPL_STORE)||'null'); }catch(e){}
+  if(!Array.isArray(saved)) return DEFAULT_TEMPLATES.map(t=>({...t}));
+  // keep saved edits/order, and pick up any new built-in templates added in later app updates
+  const ids=new Set(saved.map(t=>t.id));
+  return saved.concat(DEFAULT_TEMPLATES.filter(t=>!ids.has(t.id)).map(t=>({...t})));
+}
+let TEMPLATES=loadTemplates();
+function saveTemplates(){ try{ localStorage.setItem(TPL_STORE,JSON.stringify(TEMPLATES)); }catch(e){} }
+let selectedTemplate=TEMPLATES[0].id;
+
+// ---------- utilities ----------
+function save(){ try{ localStorage.setItem(STORE_KEY,JSON.stringify(clients)); }catch(e){} }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function initials(f,l){ return (((f||'')[0]||'')+((l||'')[0]||'')).toUpperCase() || '?'; }
+function lastContact(c){ return (c.contactLog&&c.contactLog.length)?Math.max.apply(null,c.contactLog):null; }
+function daysSince(ts){ return ts==null?null:Math.floor((Date.now()-ts)/(864e5)); }
+function needsFollowUp(c){ const d=daysSince(lastContact(c)); return d===null||d>=30; }
+function fmtLast(c){ const ts=lastContact(c); if(ts==null)return 'Never contacted'; const d=daysSince(ts); if(d===0)return 'Contacted today'; if(d===1)return 'Contacted yesterday'; return 'Contacted '+d+' days ago'; }
+function fmtDate(ts){ return new Date(ts).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); }
+
+// populate month dropdowns
+['new-bday','filter-month'].forEach(id=>{
+  const sel=document.getElementById(id);
+  MONTHS.forEach(m=>{ const o=document.createElement('option'); o.textContent=m; sel.appendChild(o); });
+});
+
+// ============================================================
+// PRODUCT IMAGE ATTACHMENT
+// ============================================================
+function handleFile(file){ if(!file||!file.type.startsWith('image/'))return; const r=new FileReader(); r.onload=e=>setImage(e.target.result); r.readAsDataURL(file); }
+function setImage(u){ attachedImageDataUrl=u; document.getElementById('img-preview').src=u; document.getElementById('img-preview-container').style.display='block'; document.getElementById('bubble-img').src=u; document.getElementById('bubble-img').style.display='block'; document.getElementById('btn-copy-img').style.display='inline-flex'; document.getElementById('drop-zone').style.display='none'; }
+function removeImage(){ attachedImageDataUrl=null; document.getElementById('img-preview').src=''; document.getElementById('img-preview-container').style.display='none'; document.getElementById('bubble-img').src=''; document.getElementById('bubble-img').style.display='none'; document.getElementById('btn-copy-img').style.display='none'; document.getElementById('drop-zone').style.display='block'; document.getElementById('img-file-input').value=''; }
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f)handleFile(f);});
+document.addEventListener('paste',e=>{ const items=e.clipboardData&&e.clipboardData.items; if(!items)return; for(let i=0;i<items.length;i++){ if(items[i].type.startsWith('image/')){ handleFile(items[i].getAsFile()); break; } } });
+async function copyImage(){ if(!attachedImageDataUrl)return; try{ const res=await fetch(attachedImageDataUrl); const blob=await res.blob(); await navigator.clipboard.write([new ClipboardItem({[blob.type]:blob})]); showSuccess('Image copied! Open Messages, paste image, then paste text below it.'); }catch(e){ showSuccess('Long-press the preview and choose Copy Image.'); } }
+
+// ============================================================
+// CLIENT DATABASE
+// ============================================================
+function addClient(){
+  const g=id=>document.getElementById(id);
+  const fname=g('new-fname').value.trim(), lname=g('new-lname').value.trim(), phone=g('new-phone').value.trim();
+  if(!fname||!phone){ alert('Please enter at least a first name and phone number.'); return; }
+  clients.push(normalize({
+    id:Date.now(), fname, lname, phone,
+    bday:g('new-bday').value, segment:g('new-segment').value,
+    notes:g('new-notes').value.trim(), wishlist:g('new-wishlist').value.trim(),
+    vip:g('new-vip').checked, contactLog:[]
+  }, clients.length));
+  save();
+  ['new-fname','new-lname','new-phone','new-notes','new-wishlist'].forEach(id=>g(id).value='');
+  g('new-bday').value=''; g('new-segment').value=''; g('new-vip').checked=false;
+  const s=g('add-success'); s.style.display='block'; setTimeout(()=>s.style.display='none',2500);
+  renderAll();
+}
+// ============================================================
+// TEMPLATE EDITOR — edits save on this device and go into backups
+// ============================================================
+let editingTplId=null;
+const tplEl=id=>document.getElementById(id);
+function openTplEditor(id){
+  editingTplId=id;
+  const t=id?TEMPLATES.find(x=>x.id===id):null;
+  tplEl('tpl-editor-title').textContent=t?'Edit: '+t.title:'New template';
+  tplEl('tpl-icon').value=t?t.icon||'':'';
+  tplEl('tpl-title').value=t?t.title:'';
+  // show conditional product blocks in the simple {{product}} form when possible
+  tplEl('tpl-body').value=t?t.body:'Hi {{name}}! \n\n{{signature}}';
+  const builtIn=!!(t&&DEFAULT_TEMPLATES.find(d=>d.id===t.id));
+  tplEl('tpl-reset').style.display=builtIn?'':'none';
+  tplEl('tpl-delete').style.display=t?'':'none';
+  tplEl('tpl-error').style.display='none';
+  tplEl('tpl-editor').style.display='block';
+  tplEl('tpl-editor').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function closeTplEditor(){ tplEl('tpl-editor').style.display='none'; editingTplId=null; }
+function tplInsert(tok){
+  const ta=tplEl('tpl-body'), a=ta.selectionStart??ta.value.length, b=ta.selectionEnd??a;
+  ta.value=ta.value.slice(0,a)+tok+ta.value.slice(b); ta.focus(); ta.selectionStart=ta.selectionEnd=a+tok.length;
+}
+function saveTpl(){
+  const title=tplEl('tpl-title').value.trim(), body=tplEl('tpl-body').value;
+  const err=tplEl('tpl-error');
+  if(!title||!body.trim()){ err.textContent='Give it a name and a message.'; err.style.display='block'; return; }
+  const icon=tplEl('tpl-icon').value.trim()||'💬';
+  const preview=body.replace(/\{\{[^}]*\}\}/g,'').replace(/\s+/g,' ').trim().slice(0,60);
+  if(editingTplId){
+    const t=TEMPLATES.find(x=>x.id===editingTplId); Object.assign(t,{icon,title,body,preview});
+  }else{
+    const id='c'+Date.now(); TEMPLATES.unshift({id,icon,title,body,preview,custom:true}); editingTplId=id;
+  }
+  saveTemplates(); selectedTemplate=editingTplId; closeTplEditor(); renderTemplateList(); updatePreview();
+  showSuccess('Template saved');
+}
+function resetTpl(){
+  const d=DEFAULT_TEMPLATES.find(x=>x.id===editingTplId); if(!d) return;
+  if(!confirm('Undo your changes to "'+d.title+'"?')) return;
+  const i=TEMPLATES.findIndex(x=>x.id===editingTplId); TEMPLATES[i]={...d};
+  saveTemplates(); closeTplEditor(); renderTemplateList(); updatePreview();
+}
+function deleteTpl(){
+  const t=TEMPLATES.find(x=>x.id===editingTplId); if(!t) return;
+  if(TEMPLATES.length<=1){ alert('Keep at least one template.'); return; }
+  if(!confirm('Delete "'+t.title+'"?')) return;
+  TEMPLATES=TEMPLATES.filter(x=>x.id!==t.id);
+  if(selectedTemplate===t.id) selectedTemplate=TEMPLATES[0].id;
+  saveTemplates(); closeTplEditor(); renderTemplateList(); updatePreview();
+}
+
+// ============================================================
+// BULK ADD — paste a list (free, offline) or scan a photo (AI, optional)
+// ============================================================
+const AI_KEY_STORE='ks_gemini_key';
+const GEMINI_MODEL='gemini-2.5-flash'; // change here if Google renames the free model
+let bulkRows=[];
+const MONTH_ABBR=MONTHS.map(m=>m.slice(0,3).toLowerCase());
+const digitsOf=p=>String(p||'').replace(/\D/g,'').slice(-10);
+function fmtPhone(d){ d=digitsOf(d); return d.length===10?d.slice(0,3)+'-'+d.slice(3,6)+'-'+d.slice(6):d; }
+function findMonth(txt){
+  const w=txt.match(/\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b\.?/i);
+  if(w) return {month:MONTHS[MONTH_ABBR.indexOf(w[1].slice(0,3).toLowerCase())], raw:w[0]};
+  const d=txt.match(/\b(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.]\d{2,4})?\b/);
+  if(d && +d[1]>=1 && +d[1]<=12) return {month:MONTHS[+d[1]-1], raw:d[0]};
+  return null;
+}
+function parseLine(line){
+  let rest=line, phone='', bday='';
+  const pm=rest.match(/(\+?1[\s.\-]?)?\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}/);
+  if(pm){ phone=fmtPhone(pm[0]); rest=rest.replace(pm[0],' '); }
+  const mm=findMonth(rest);
+  if(mm){ bday=mm.month; rest=rest.replace(mm.raw,' '); }
+  rest=rest.replace(/\b(bday|birthday|b-day|dob)\b:?/ig,' ');
+  const chunks=rest.split(/[,;|\t]/).map(x=>x.trim()).filter(Boolean);
+  let nameWords=(chunks.shift()||'').replace(/[^A-Za-zÀ-ſ' \-]/g,' ').split(/\s+/).filter(Boolean);
+  let notes=chunks.join(', ');
+  if(nameWords.length>3){ notes=[nameWords.slice(2).join(' '),notes].filter(Boolean).join(', '); nameWords=nameWords.slice(0,2); }
+  const cap=w=>w.charAt(0).toUpperCase()+w.slice(1);
+  return {fname:cap(nameWords[0]||''), lname:nameWords.slice(1).map(cap).join(' '), phone, bday, notes};
+}
+function bulkParseText(){
+  const lines=document.getElementById('bulk-text').value.split(/\n/).map(l=>l.trim()).filter(Boolean);
+  const out=[];
+  lines.forEach(l=>{
+    const r=parseLine(l), prev=out[out.length-1];
+    if(prev && !r.fname && (r.phone||r.bday)){ if(!prev.phone)prev.phone=r.phone; if(!prev.bday)prev.bday=r.bday; return; }
+    if(r.fname||r.phone) out.push(r);
+  });
+  if(!out.length){ bulkError('Couldn’t find any clients in that text.'); return; }
+  showBulkReview(out);
+}
+function bulkError(m){ const e=document.getElementById('bulk-error'); e.textContent=m; e.style.display=m?'block':'none'; }
+function showBulkReview(rows){
+  bulkError('');
+  const known=new Set(clients.map(c=>digitsOf(c.phone)).filter(Boolean));
+  bulkRows=rows.map(r=>{ const dupe=!!r.phone && known.has(digitsOf(r.phone)); return {...r, dupe, on:!dupe}; });
+  renderBulkReview();
+}
+function renderBulkReview(){
+  const box=document.getElementById('bulk-review');
+  if(!bulkRows.length){ box.innerHTML=''; return; }
+  const opts=b=>'<option value="">Bday —</option>'+MONTHS.map(m=>`<option${m===b?' selected':''}>${m}</option>`).join('');
+  const n=bulkRows.filter(r=>r.on).length;
+  box.innerHTML=`<div class="section-title">Review ${bulkRows.length} found · fix anything, then add</div>`+
+    bulkRows.map((r,i)=>`<div class="bulk-row${r.dupe?' dupe':''}${r.on?'':' off'}">
+      <input type="checkbox" ${r.on?'checked':''} onchange="bulkRows[${i}].on=this.checked;renderBulkReview()">
+      <div class="bulk-fields">
+        <input value="${esc(r.fname)}" placeholder="First" oninput="bulkRows[${i}].fname=this.value">
+        <input value="${esc(r.lname)}" placeholder="Last" oninput="bulkRows[${i}].lname=this.value">
+        <input type="tel" value="${esc(r.phone)}" placeholder="Phone" oninput="bulkRows[${i}].phone=this.value">
+        <select onchange="bulkRows[${i}].bday=this.value">${opts(r.bday)}</select>
+        ${r.notes?`<input style="grid-column:1/-1" value="${esc(r.notes)}" placeholder="Notes" oninput="bulkRows[${i}].notes=this.value">`:''}
+        ${r.dupe?'<div class="bulk-tag">⚠ Already in your list (same phone)</div>':''}
+      </div></div>`).join('')+
+    `<div style="display:flex;gap:8px"><button class="btn btn-primary" style="flex:1" onclick="bulkCommit()" ${n?'':'disabled'}>+ Add ${n} client${n===1?'':'s'}</button>
+     <button class="btn btn-ghost" onclick="bulkRows=[];renderBulkReview()">Cancel</button></div>`;
+}
+function bulkCommit(){
+  const pick=bulkRows.filter(r=>r.on);
+  const bad=pick.find(r=>!r.fname.trim()||!digitsOf(r.phone));
+  if(bad){ bulkError('Every checked row needs a first name and phone (or uncheck it).'); return; }
+  const base=Date.now();
+  pick.forEach((r,i)=>clients.push(normalize({id:base+i, fname:r.fname.trim(), lname:r.lname.trim(), phone:fmtPhone(r.phone), bday:r.bday, notes:(r.notes||'').trim(), contactLog:[]}, clients.length)));
+  save(); bulkRows=[]; renderBulkReview(); document.getElementById('bulk-text').value='';
+  const s=document.getElementById('add-success'); s.textContent='✓ Added '+pick.length+' client'+(pick.length===1?'':'s'); s.style.display='block'; setTimeout(()=>{ s.style.display='none'; s.textContent='✓ Client added'; },3000);
+  renderAll();
+}
+function setAiKey(){
+  const cur=localStorage.getItem(AI_KEY_STORE);
+  const k=prompt('Paste your free Google AI Studio (Gemini) API key.\nIt stays on this phone only — never in the code.\nLeave blank to remove it.', cur||'');
+  if(k===null) return;
+  k.trim()?localStorage.setItem(AI_KEY_STORE,k.trim()):localStorage.removeItem(AI_KEY_STORE);
+}
+function shrinkImage(file){
+  return new Promise((res,rej)=>{ const img=new Image(); img.onload=()=>{ const s=Math.min(1,1600/Math.max(img.width,img.height)); const c=document.createElement('canvas'); c.width=img.width*s; c.height=img.height*s; c.getContext('2d').drawImage(img,0,0,c.width,c.height); res(c.toDataURL('image/jpeg',0.85).split(',')[1]); }; img.onerror=rej; img.src=URL.createObjectURL(file); });
+}
+async function bulkScanPhoto(file){
+  if(!file) return;
+  let key=localStorage.getItem(AI_KEY_STORE);
+  if(!key){ setAiKey(); key=localStorage.getItem(AI_KEY_STORE); if(!key) return; }
+  bulkError(''); document.getElementById('bulk-review').innerHTML='<p class="bulk-hint">⏳ Reading your list…</p>';
+  try{
+    const data=await shrinkImage(file);
+    const prompt='This is a photo of a handwritten client list from a retail jewelry counter. Extract every person. Return ONLY a JSON array of objects with keys fname, lname, phone, bday, notes. phone: digits as written. bday: full English month name if any birthday/date is written, else "". notes: anything else written for that person, else "". Use "" for anything unreadable; do not guess.';
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt},{inline_data:{mime_type:'image/jpeg',data}}]}], generationConfig:{responseMimeType:'application/json',temperature:0}})
+    });
+    const j=await r.json();
+    if(!r.ok) throw new Error((j.error&&j.error.message)||('HTTP '+r.status));
+    const txt=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').replace(/```json|```/g,'').trim();
+    const arr=JSON.parse(txt);
+    const rows=(Array.isArray(arr)?arr:[]).map(p=>({fname:String(p.fname||'').trim(), lname:String(p.lname||'').trim(), phone:fmtPhone(p.phone), bday:MONTHS.includes(p.bday)?p.bday:'', notes:String(p.notes||'').trim()})).filter(p=>p.fname||p.phone);
+    if(!rows.length){ document.getElementById('bulk-review').innerHTML=''; bulkError('No clients found in that photo. Try a brighter, straight-on shot.'); return; }
+    showBulkReview(rows);
+  }catch(e){ document.getElementById('bulk-review').innerHTML=''; bulkError('Scan failed: '+e.message+' — you can still paste the list instead.'); }
+}
+function deleteClient(id){ if(!confirm('Remove this client? This cannot be undone.'))return; clients=clients.filter(c=>c.id!==id); save(); closeSheet(); renderAll(); }
+function toggleVip(id){ const c=clients.find(c=>c.id===id); if(!c)return; c.vip=!c.vip; save(); renderAll(); if(currentDetailId===id)openDetail(id); }
+function logContact(id){ const c=clients.find(c=>c.id===id); if(!c)return; c.contactLog.push(Date.now()); save(); renderAll(); if(currentDetailId===id)openDetail(id); }
+
+// ============================================================
+// BACKUP
+// ============================================================
+function exportClients(){
+  const blob=new Blob([JSON.stringify({clients,templates:TEMPLATES},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download='ks-clients-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  const s=document.getElementById('backup-success'); s.textContent='\u2713 Backup downloaded ('+clients.length+' clients)'; s.style.display='block'; setTimeout(()=>s.style.display='none',4000);
+}
+function importClientsFile(file){
+  const okEl=document.getElementById('backup-success'), errEl=document.getElementById('backup-error');
+  okEl.style.display='none'; errEl.style.display='none';
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      const list=Array.isArray(data)?data:(data&&data.clients);
+      if(!Array.isArray(list)) throw new Error('File is not a client list.');
+      clients=list.map((c,i)=>normalize(c,i));
+      if(data&&Array.isArray(data.templates)&&data.templates.length){ TEMPLATES=data.templates; saveTemplates(); selectedTemplate=TEMPLATES[0].id; renderTemplateList(); updatePreview(); }
+      save(); renderAll();
+      okEl.textContent='\u2713 Imported '+clients.length+' clients.'; okEl.style.display='block'; setTimeout(()=>okEl.style.display='none',4000);
+    }catch(err){ errEl.textContent='Could not import: '+err.message; errEl.style.display='block'; }
+  };
+  reader.readAsText(file);
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderAll(){ renderStats(); renderClients(); renderRecipients(); renderBdayList(); renderFollowupList(); updateRemBadge(); }
+function renderStats(){
+  document.getElementById('stat-total').textContent=clients.length;
+  document.getElementById('stat-bday').textContent=clients.filter(c=>c.bday===NOW_MONTH).length;
+  document.getElementById('stat-vip').textContent=clients.filter(c=>c.vip).length;
+}
+function updateRemBadge(){
+  const n=clients.filter(c=>c.bday===NOW_MONTH).length;
+  const b=document.getElementById('rem-badge');
+  if(n>0){ b.textContent=n; b.style.display='flex'; } else b.style.display='none';
+}
+function setQuickFilter(f){
+  quickFilter=f;
+  document.querySelectorAll('#quick-filters .chip').forEach(c=>c.classList.toggle('active',c.dataset.f===f));
+  renderClients();
+}
+function segBadge(seg){ return seg?'<span class="badge seg">'+esc(seg)+'</span>':''; }
+function renderClients(){
+  const q=document.getElementById('search-clients').value.toLowerCase();
+  const m=document.getElementById('filter-month').value;
+  const el=document.getElementById('client-list');
+  const f=clients.filter(c=>{
+    const n=(c.fname+' '+c.lname).toLowerCase();
+    const matchesSearch=!q||n.includes(q)||c.phone.includes(q)||(c.notes||'').toLowerCase().includes(q)||(c.wishlist||'').toLowerCase().includes(q)||(c.segment||'').toLowerCase().includes(q);
+    const matchesMonth=!m||c.bday===m;
+    let matchesQuick=true;
+    if(quickFilter==='vip')matchesQuick=c.vip;
+    else if(quickFilter==='bday')matchesQuick=c.bday===NOW_MONTH;
+    else if(quickFilter==='followup')matchesQuick=needsFollowUp(c);
+    return matchesSearch&&matchesMonth&&matchesQuick;
+  }).sort((a,b)=> (a.fname+a.lname).localeCompare(b.fname+b.lname));
+  if(!f.length){ el.innerHTML=clients.length?'<div class="empty-state">No clients match these filters.</div>':'<div class="empty-state">No clients yet. Add your first client above.</div>'; return; }
+  el.innerHTML=f.map(c=>{
+    const b=c.bday===NOW_MONTH, fu=needsFollowUp(c);
+    let meta=esc(c.phone); if(c.bday)meta+=' \u00b7 '+c.bday;
+    const tags=[
+      c.vip?'<span class="badge vip">&#9733; VIP</span>':'',
+      b?'<span class="badge bday">&#127874; Birthday</span>':'',
+      segBadge(c.segment),
+      fu?'<span class="badge due">Follow up</span>':''
+    ].filter(Boolean).join('');
+    return `<div class="client-row${b?' bday-highlight':''}" onclick="openDetail(${c.id})">
+      <div class="avatar${c.vip?' vip':''}">${initials(c.fname,c.lname)}</div>
+      <div class="client-info">
+        <div class="client-name">${esc(c.fname)} ${esc(c.lname)}</div>
+        <div class="client-meta">${meta}</div>
+        ${tags?'<div class="client-tags">'+tags+'</div>':''}
+      </div>
+      <div class="chevron">&#8250;</div>
+    </div>`;
+  }).join('');
+}
+
+// ---------- Detail sheet ----------
+function openDetail(id){
+  const c=clients.find(x=>x.id===id); if(!c)return;
+  currentDetailId=id;
+  const digits=c.phone.replace(/\D/g,'');
+  const log=(c.contactLog||[]).slice().sort((a,b)=>b-a);
+  const logHtml=log.length?log.map(ts=>`<div class="log-item"><span class="log-dot"></span>${fmtDate(ts)}</div>`).join(''):'<div style="font-size:13px;color:var(--faint);padding:6px 0">No contact logged yet.</div>';
+  document.getElementById('detail-body').innerHTML=`
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div class="sheet-avatar${c.vip?' vip':''}">${initials(c.fname,c.lname)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="sheet-name">${esc(c.fname)} ${esc(c.lname)}</div>
+        <div class="sheet-sub">${esc(c.phone)}</div>
+      </div>
+      <button class="sheet-close" onclick="closeSheet()">&times;</button>
+    </div>
+    <div class="detail-actions">
+      <a class="btn btn-primary" href="sms:${digits}" style="text-decoration:none">&#128172; Text now</a>
+      <button class="btn btn-ghost" onclick="logContact(${c.id})">&#10003; Log contact</button>
+    </div>
+    <div class="toggle-vip">
+      <span class="lbl">&#9733; VIP client</span>
+      <label class="switch"><input type="checkbox" ${c.vip?'checked':''} onchange="toggleVip(${c.id})"><span class="slider"></span></label>
+    </div>
+    <div class="card" style="margin:0 0 12px">
+      <div class="kv"><span class="k">Birthday month</span><span class="v">${c.bday?esc(c.bday):'&#8212;'}</span></div>
+      <div class="kv"><span class="k">Segment</span><span class="v">${c.segment?esc(c.segment):'&#8212;'}</span></div>
+      <div class="kv"><span class="k">Interested in</span><span class="v">${c.wishlist?esc(c.wishlist):'&#8212;'}</span></div>
+      <div class="kv"><span class="k">Notes</span><span class="v">${c.notes?esc(c.notes):'&#8212;'}</span></div>
+      <div class="kv"><span class="k">Last contacted</span><span class="v" style="color:${needsFollowUp(c)?'var(--err)':'inherit'}">${fmtLast(c)}</span></div>
+    </div>
+    <div class="card" style="margin:0 0 12px">
+      <div class="section-title">Contact history</div>
+      ${logHtml}
+    </div>
+    <div style="display:flex;justify-content:flex-end">
+      <button class="btn-danger" onclick="deleteClient(${c.id})">Remove client</button>
+    </div>`;
+  document.getElementById('detail-sheet').classList.add('open');
+  document.getElementById('sheet-backdrop').classList.add('open');
+}
+function closeSheet(){ currentDetailId=null; document.getElementById('detail-sheet').classList.remove('open'); document.getElementById('sheet-backdrop').classList.remove('open'); }
+
+// ---------- Recipients ----------
+function renderRecipients(){
+  const el=document.getElementById('recipient-list');
+  if(!clients.length){ el.innerHTML='<div style="font-size:13px;color:var(--faint);padding:8px">No clients yet.</div>'; return; }
+  el.innerHTML=clients.slice().sort((a,b)=>(a.fname+a.lname).localeCompare(b.fname+b.lname)).map(c=>`<label class="checkbox-item"><input type="checkbox" ${selectedRecipients.has(c.id)?'checked':''} onchange="toggleRecipient(${c.id})"><span>${esc(c.fname)} ${esc(c.lname)} \u00b7 ${esc(c.phone)}${c.vip?' \u2b50':''}${c.bday===NOW_MONTH?' \uD83C\uDF82':''}</span></label>`).join('');
+}
+function toggleRecipient(id){ selectedRecipients.has(id)?selectedRecipients.delete(id):selectedRecipients.add(id); updatePreview(); }
+function selectBirthdayClients(){ selectedRecipients=new Set(clients.filter(c=>c.bday===NOW_MONTH).map(c=>c.id)); renderRecipients(); updatePreview(); }
+function selectVIP(){ selectedRecipients=new Set(clients.filter(c=>c.vip).map(c=>c.id)); renderRecipients(); updatePreview(); }
+function selectAll(){ selectedRecipients=new Set(clients.map(c=>c.id)); renderRecipients(); updatePreview(); }
+function clearAll(){ selectedRecipients.clear(); renderRecipients(); updatePreview(); }
+
+// ---------- Message builder ----------
+function renderTemplateList(){
+  document.getElementById('template-list').innerHTML=TEMPLATES.map(t=>`<div class="template-card${t.id===selectedTemplate?' selected':''}" id="tpl-${t.id}" onclick="selectTemplate('${t.id}')"><button class="tpl-edit" onclick="event.stopPropagation();openTplEditor('${t.id}')">&#9998;&#65039; Edit</button><div class="template-title" style="padding-right:64px">${esc(t.icon||'')} ${esc(t.title)}${t.custom?'<span class="tpl-badge">Yours</span>':''}</div><div class="template-preview">${esc(t.preview||'')}</div></div>`).join('');
+}
+function selectTemplate(t){ selectedTemplate=t; TEMPLATES.forEach(tpl=>{ const el=document.getElementById('tpl-'+tpl.id); if(el) el.classList.toggle('selected',tpl.id===t); }); updatePreview(); }
+function buildMessage(clientName){
+  const product=document.getElementById('msg-product').value.trim();
+  const extra=document.getElementById('msg-extra').value.trim();
+  const name=clientName||'[Client Name]';
+  let msg=(TEMPLATES.find(t=>t.id===selectedTemplate)||TEMPLATES[0]).body;
+  msg=msg.replace(/\{\{product:([\s\S]*?)\}\}/g,(_,b)=>product?b.replace(/__PRODUCT__/g,product):'');
+  msg=msg.replace(/\{\{product\}\}/g,product);
+  msg=msg.replace(/\{\{extra\}\}/g,extra?'\n\n'+extra:'');
+  msg=msg.replace(/\{\{name\}\}/g,name).replace(/\{\{signature\}\}/g,SIGNATURE);
+  return msg;
+}
+function updatePreview(){
+  const sel=clients.filter(c=>selectedRecipients.has(c.id));
+  const name=sel.length===1?sel[0].fname:(sel.length>1?'['+sel.length+' clients selected]':null);
+  document.getElementById('msg-preview').textContent=buildMessage(name);
+}
+function copyMessage(){ const msg=document.getElementById('msg-preview').textContent; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(msg).then(()=>showSuccess('Text copied!')).catch(()=>fallbackCopy(msg)); } else fallbackCopy(msg); }
+function fallbackCopy(text){ const ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); showSuccess('Text copied!'); }
+function showSuccess(msg){ const s=document.getElementById('copy-success'); s.textContent='\u2713 '+msg; s.style.display='block'; setTimeout(()=>s.style.display='none',4000); }
+function openTexts(){ const sel=clients.filter(c=>selectedRecipients.has(c.id)); if(!sel.length){ alert('Select at least one recipient first.'); return; } window.open('sms:'+sel[0].phone.replace(/\D/g,'')+'?body='+encodeURIComponent(buildMessage(sel[0].fname))); }
+
+// ---------- Product search ----------
+function searchProduct(){
+  const q=document.getElementById('product-query').value.trim(); if(!q)return;
+  const url='https://www.dillards.com/search-term/'+('kendra scott '+q).toLowerCase().replace(/\s+/g,'+')+'/accessories-jewelry';
+  document.getElementById('product-results').innerHTML=`<div class="card"><div style="font-size:14px;font-weight:600;margin-bottom:10px">${esc(q)}</div><a href="${url}" target="_blank" class="search-result-link"><div style="display:flex;align-items:center;gap:10px"><div style="font-size:22px">&#128279;</div><div><div style="font-size:13px;font-weight:600">Open on Dillard's &rarr;</div><div style="font-size:11px;color:var(--faint);margin-top:2px;word-break:break-all">${url}</div></div></div></a><div style="font-size:13px;color:#666;margin-top:10px;line-height:1.7">On the product page: save the photo, then go to <strong>Message</strong> and attach it in step 2.</div></div>`;
+}
+
+// ---------- Reminders ----------
+function renderBdayList(){
+  const el=document.getElementById('bday-list');
+  document.getElementById('bday-title').textContent=NOW_MONTH+' birthdays';
+  const b=clients.filter(c=>c.bday===NOW_MONTH).sort((a,b)=>(a.fname+a.lname).localeCompare(b.fname+b.lname));
+  if(!b.length){ el.innerHTML='<div style="font-size:13px;color:var(--faint);padding:8px">No birthdays in '+NOW_MONTH+'.</div>'; return; }
+  el.innerHTML=b.map(c=>`<div class="client-row" onclick="openDetail(${c.id})"><div class="avatar${c.vip?' vip':''}">${initials(c.fname,c.lname)}</div><div class="client-info"><div class="client-name">${esc(c.fname)} ${esc(c.lname)}</div><div class="client-meta">${esc(c.phone)}</div></div><span class="badge bday">${NOW_MONTH}</span></div>`).join('');
+}
+function renderFollowupList(){
+  const el=document.getElementById('followup-list');
+  const f=clients.filter(needsFollowUp).sort((a,b)=>(lastContact(a)||0)-(lastContact(b)||0));
+  if(!f.length){ el.innerHTML='<div style="font-size:13px;color:var(--faint);padding:8px">Everyone\'s been contacted recently. \uD83C\uDF89</div>'; return; }
+  el.innerHTML=f.slice(0,12).map(c=>`<div class="client-row" onclick="openDetail(${c.id})"><div class="avatar${c.vip?' vip':''}">${initials(c.fname,c.lname)}</div><div class="client-info"><div class="client-name">${esc(c.fname)} ${esc(c.lname)}</div><div class="client-meta">${fmtLast(c)}</div></div><span class="badge due">Due</span></div>`).join('') + (f.length>12?'<div style="font-size:12px;color:var(--faint);text-align:center;padding-top:8px">+ '+(f.length-12)+' more</div>':'');
+}
+
+// ---------- Info: birthstones ----------
+const BIRTHSTONES=[
+  {month:'January',stone:'Garnet',color:'Deep Red',emoji:'\uD83D\uDD34',bg:'#8B1A1A',ks:'garnet'},
+  {month:'February',stone:'Amethyst',color:'Purple',emoji:'\uD83D\uDFE3',bg:'#6B3FA0',ks:'amethyst'},
+  {month:'March',stone:'Aquamarine',color:'Light Blue',emoji:'\uD83D\uDD35',bg:'#5BA4CF',ks:'aquamarine'},
+  {month:'April',stone:'Diamond / White',color:'Clear / White',emoji:'\u26AA',bg:'#E8E8E8',ks:'white'},
+  {month:'May',stone:'Emerald',color:'Rich Green',emoji:'\uD83D\uDFE2',bg:'#1A7A3C',ks:'emerald'},
+  {month:'June',stone:'Pearl / Alexandrite',color:'Cream / Iridescent',emoji:'\uD83E\uDD0D',bg:'#D4C5A9',ks:'mother+of+pearl'},
+  {month:'July',stone:'Ruby',color:'Vibrant Red',emoji:'\u2764\uFE0F',bg:'#C0152A',ks:'red'},
+  {month:'August',stone:'Peridot',color:'Lime Green',emoji:'\uD83C\uDF4F',bg:'#7EC850',ks:'green'},
+  {month:'September',stone:'Sapphire',color:'Deep Blue',emoji:'\uD83D\uDD37',bg:'#1A3A8B',ks:'blue+sapphire'},
+  {month:'October',stone:'Opal / Tourmaline',color:'Multi / Pink',emoji:'\uD83C\uDF08',bg:'#D4537E',ks:'opal'},
+  {month:'November',stone:'Topaz / Citrine',color:'Golden Yellow',emoji:'\uD83D\uDFE1',bg:'#C8860A',ks:'gold'},
+  {month:'December',stone:'Turquoise / Blue Topaz',color:'Bright Blue',emoji:'\uD83D\uDC8E',bg:'#1AACAC',ks:'turquoise'}
+];
+function renderBirthstones(){
+  const grid=document.getElementById('birthstone-grid'); if(grid.innerHTML!=='')return;
+  grid.innerHTML=BIRTHSTONES.map(b=>{
+    const cur=b.month===NOW_MONTH;
+    const url='https://www.dillards.com/search-term/kendra+scott+elisa+'+b.ks+'/accessories-jewelry';
+    return `<div class="birthstone-card${cur?' current-month':''}"><div class="stone-dot" style="background:${b.bg}20;border:2px solid ${b.bg}40">${b.emoji}</div><div class="stone-info"><div class="stone-month">${b.month}${cur?' \u2605':''}</div><div class="stone-name">${b.stone}</div><div class="stone-color">${b.color}</div><a href="${url}" target="_blank" class="stone-ks-link">Search on Dillard's &rarr;</a></div></div>`;
+  }).join('');
+}
+
+// ---------- Tabs ----------
+function switchTab(t){
+  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.toggle('active',el.dataset.tab===t));
+  document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
+  document.getElementById('panel-'+t).classList.add('active');
+  window.scrollTo({top:0,behavior:'instant'in window?'instant':'auto'});
+  if(t==='message'){ renderRecipients(); updatePreview(); }
+  if(t==='reminders'){ renderBdayList(); renderFollowupList(); }
+  if(t==='info') renderBirthstones();
+}
+function switchTabAndFilter(){ switchTab('message'); setTimeout(()=>{ selectBirthdayClients(); selectTemplate('birthday'); },80); }
+function sendNewItems(){ switchTab('message'); setTimeout(()=>{ selectAll(); selectTemplate('newitems'); },80); }
+
+// ---------- Boot ----------
+renderTemplateList();
+renderAll();
+updatePreview();
+(function welcome(){
+  const h=new Date().getHours();
+  const g=h<12?'Good morning':(h<18?'Good afternoon':'Good evening');
+  const el=document.getElementById('welcome-banner');
+  el.textContent='\uD83D\uDC4B '+g+', Andrea! You have '+clients.length+' clients.';
+  el.style.display='block'; setTimeout(()=>el.style.display='none',4000);
+})();
+
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('./service-worker.js').catch(()=>{}); }); }
+</script>
+
+</body></html>
